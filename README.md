@@ -67,9 +67,7 @@ the menu's width relative to the current window's width.
 
 ```lua
 require("peruse").setup({
-    menu = {
-        width = vim.api.nvim_win_get_width(0) - 4,
-    }
+    width = vim.api.nvim_win_get_width(0) - 4,
 })
 ```
 
