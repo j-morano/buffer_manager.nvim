@@ -146,13 +146,6 @@ function M.toggle_quick_menu()
         "autocmd BufLeave <buffer> ++nested ++once silent"..
         " lua require('peruse.ui').toggle_quick_menu()"
     )
-    vim.cmd(
-        string.format(
-            "autocmd BufWriteCmd <buffer=%s>"..
-            " lua require('peruse.ui').on_menu_save()",
-            Peruse_bufh
-        )
-    )
     -- Go to file hitting its line number
     local str = "123456789"
     for i = 1, #str do
@@ -178,43 +171,6 @@ function M.select_menu_item()
     M.nav_file(idx)
 end
 
-local function get_menu_items()
-    log.trace("_get_menu_items()")
-    local lines = vim.api.nvim_buf_get_lines(Peruse_bufh, 0, -1, true)
-    local indices = {}
-
-    for _, line in pairs(lines) do
-        if not utils.is_white_space(line) then
-            table.insert(indices, line)
-        end
-    end
-
-    return indices
-end
-
-local function set_mark_list(new_list)
-    log.trace("set_mark_list(): New list:", new_list)
-
-    -- Check deletions
-    for mk, _ in pairs(marks) do
-        local was_deleted = true
-        for ln, v in pairs(new_list) do
-            if marks[mk].filename == v then
-                marks[mk].line = ln
-                was_deleted = false
-            end
-        end
-        if was_deleted then
-            vim.api.nvim_buf_delete(marks[mk].buf_id, {})
-            marks[mk] = nil
-        end
-    end
-end
-
-function M.on_menu_save()
-    log.trace("on_menu_save()")
-    set_mark_list(get_menu_items())
-end
 
 function M.nav_file(id)
     log.trace("nav_file(): Navigating to", id)
