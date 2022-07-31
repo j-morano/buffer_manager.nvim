@@ -52,6 +52,17 @@ end
 
 local marks = {}
 
+
+local function not_in_marks(filename)
+    for idx = 1, #marks do
+        if marks[idx].filename == filename then
+            return false
+        end
+    end
+    return true
+end
+
+
 function M.toggle_quick_menu()
     log.trace("toggle_quick_menu()")
     local current_buf_id = 0
@@ -70,7 +81,6 @@ function M.toggle_quick_menu()
 
     local buffers = vim.api.nvim_list_bufs()
 
-    marks = {}
     local len = 0
     local current_buf_line = 1
     for idx = 1, #buffers do
@@ -83,13 +93,19 @@ function M.toggle_quick_menu()
             if buf_id == current_buf_id then
                 current_buf_line = len
             end
-            marks[len] = {
-                buf_id = buf_id,
-                filename = filename,
-                buf_name = buf_name,
-            }
-            contents[len] = string.format("%s", filename)
+            if not_in_marks(filename) then
+                marks[len] = {
+                    line = len,
+                    buf_id = buf_id,
+                    filename = filename,
+                    buf_name = buf_name,
+                }
+            end
         end
+    end
+    for idx = 1, #marks do
+        local line = marks[idx].line
+        contents[line] = string.format("%s", marks[idx].filename)
     end
 
     vim.api.nvim_win_set_option(Peruse_win_id, "number", true)
@@ -182,8 +198,9 @@ local function set_mark_list(new_list)
     -- Check deletions
     for idx = 1, #marks do
         local was_deleted = true
-        for _, v in pairs(new_list) do
+        for ln, v in pairs(new_list) do
             if marks[idx].filename == v then
+                marks[idx].line = ln
                 was_deleted = false
             end
         end
@@ -202,7 +219,12 @@ end
 function M.nav_file(id)
     log.trace("nav_file(): Navigating to", id)
 
-    local mark = marks[id]
+    local mark = {}
+    for idx = 1, #marks do
+        if id == marks[idx].line then
+            mark = marks[idx]
+        end
+    end
     if not mark then
         return
     else
