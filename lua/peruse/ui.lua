@@ -52,16 +52,6 @@ local function create_window()
 end
 
 
-local function not_in_marks(filename)
-    for _, v in pairs(marks) do
-        if v.filename == filename then
-            return false
-        end
-    end
-    return true
-end
-
-
 function M.toggle_quick_menu()
     log.trace("toggle_quick_menu()")
     local current_buf_id = 0
@@ -89,23 +79,16 @@ function M.toggle_quick_menu()
         -- if buffer is listed, then add to contents and marks
         if 1 == vim.fn.buflisted(buf_id) then
             len = len + 1
-            if not_in_marks(filename) then
-                marks[len] = {
-                    line = len,
-                    buf_id = buf_id,
-                    filename = filename,
-                    buf_name = buf_name,
-                }
+            if buf_id == current_buf_id then
+                current_buf_line = len
             end
+            marks[len] = {
+                buf_id = buf_id,
+                filename = filename,
+                buf_name = buf_name,
+            }
+            contents[len] = string.format("%s", filename)
         end
-    end
-    for _, v in pairs(marks) do
-        local line = v.line
-        local buf_id = v.buf_id
-        if buf_id == current_buf_id then
-            current_buf_line = line
-        end
-        contents[line] = string.format("%s", v.filename)
     end
 
     vim.api.nvim_win_set_option(Peruse_win_id, "number", true)
@@ -146,6 +129,13 @@ function M.toggle_quick_menu()
         "autocmd BufLeave <buffer> ++nested ++once silent"..
         " lua require('peruse.ui').toggle_quick_menu()"
     )
+    vim.cmd(
+        string.format(
+            "autocmd BufWriteCmd <buffer=%s>"..
+            " lua require('peruse.ui').on_menu_save()",
+            Peruse_bufh
+        )
+    )
     -- Go to file hitting its line number
     local str = "123456789"
     for i = 1, #str do
@@ -171,16 +161,47 @@ function M.select_menu_item()
     M.nav_file(idx)
 end
 
+local function get_menu_items()
+    log.trace("_get_menu_items()")
+    local lines = vim.api.nvim_buf_get_lines(Peruse_bufh, 0, -1, true)
+    local indices = {}
+
+    for _, line in pairs(lines) do
+        if not utils.is_white_space(line) then
+            table.insert(indices, line)
+        end
+    end
+
+    return indices
+end
+
+local function set_mark_list(new_list)
+    log.trace("set_mark_list(): New list:", new_list)
+
+    -- Check deletions
+    for idx = 1, #marks do
+        local was_deleted = true
+        for _, v in pairs(new_list) do
+            if marks[idx].filename == v then
+                was_deleted = false
+            end
+        end
+        if was_deleted then
+            vim.api.nvim_buf_delete(marks[idx].buf_id, {})
+            marks[idx] = nil
+        end
+    end
+end
+
+function M.on_menu_save()
+    log.trace("on_menu_save()")
+    set_mark_list(get_menu_items())
+end
 
 function M.nav_file(id)
     log.trace("nav_file(): Navigating to", id)
 
-    local mark = {}
-    for k, _ in pairs(marks) do
-        if id == marks[k].line then
-            mark = marks[k]
-        end
-    end
+    local mark = marks[id]
     if not mark then
         return
     else
