@@ -77,7 +77,8 @@ function M.toggle_quick_menu()
         local buf_id = buffers[idx]
         local buf_name = vim.api.nvim_buf_get_name(buf_id)
         local filename = utils.normalize_path(buf_name)
-        if filename ~= "" and filename ~= "peruse-menu" then
+        -- if buffer is listed, then add to contents and marks
+        if 1 == vim.fn.buflisted(buf_id) then
             len = len + 1
             if buf_id == current_buf_id then
                 current_buf_line = len
