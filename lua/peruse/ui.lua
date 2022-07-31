@@ -89,9 +89,6 @@ function M.toggle_quick_menu()
         -- if buffer is listed, then add to contents and marks
         if 1 == vim.fn.buflisted(buf_id) then
             len = len + 1
-            if buf_id == current_buf_id then
-                current_buf_line = len
-            end
             if not_in_marks(filename) then
                 marks[len] = {
                     line = len,
@@ -104,6 +101,10 @@ function M.toggle_quick_menu()
     end
     for idx = 1, #marks do
         local line = marks[idx].line
+        local buf_id = marks[idx].buf_id
+        if buf_id == current_buf_id then
+            current_buf_line = line
+        end
         contents[line] = string.format("%s", marks[idx].filename)
     end
 
