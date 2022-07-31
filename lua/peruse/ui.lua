@@ -53,8 +53,8 @@ end
 
 
 local function not_in_marks(filename)
-    for idx = 1, #marks do
-        if marks[idx].filename == filename then
+    for _, v in pairs(marks) do
+        if v.filename == filename then
             return false
         end
     end
@@ -99,13 +99,13 @@ function M.toggle_quick_menu()
             end
         end
     end
-    for idx = 1, #marks do
-        local line = marks[idx].line
-        local buf_id = marks[idx].buf_id
+    for _, v in pairs(marks) do
+        local line = v.line
+        local buf_id = v.buf_id
         if buf_id == current_buf_id then
             current_buf_line = line
         end
-        contents[line] = string.format("%s", marks[idx].filename)
+        contents[line] = string.format("%s", v.filename)
     end
 
     vim.api.nvim_win_set_option(Peruse_win_id, "number", true)
@@ -196,17 +196,17 @@ local function set_mark_list(new_list)
     log.trace("set_mark_list(): New list:", new_list)
 
     -- Check deletions
-    for idx = 1, #marks do
+    for mk, _ in pairs(marks) do
         local was_deleted = true
         for ln, v in pairs(new_list) do
-            if marks[idx].filename == v then
-                marks[idx].line = ln
+            if marks[mk].filename == v then
+                marks[mk].line = ln
                 was_deleted = false
             end
         end
         if was_deleted then
-            vim.api.nvim_buf_delete(marks[idx].buf_id, {})
-            marks[idx] = nil
+            vim.api.nvim_buf_delete(marks[mk].buf_id, {})
+            marks[mk] = nil
         end
     end
 end
@@ -220,9 +220,9 @@ function M.nav_file(id)
     log.trace("nav_file(): Navigating to", id)
 
     local mark = {}
-    for idx = 1, #marks do
-        if id == marks[idx].line then
-            mark = marks[idx]
+    for k, _ in pairs(marks) do
+        if id == marks[k].line then
+            mark = marks[k]
         end
     end
     if not mark then
