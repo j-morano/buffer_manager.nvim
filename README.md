@@ -1,7 +1,7 @@
 <div align="center">
 
 # peruse.nvim
-##### A lightweight plugin to easily navigate open buffers
+##### A simple plugin to easily navigate open buffers
 
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
