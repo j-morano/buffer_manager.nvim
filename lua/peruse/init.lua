@@ -5,6 +5,9 @@ local M = {}
 
 PeruseConfig = PeruseConfig or {}
 
+M.marks = {}
+
+
 -- 1. saved.  Where do we save?
 function M.setup(config)
     log.trace("setup(): Setting up...")

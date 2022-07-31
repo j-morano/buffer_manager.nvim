@@ -2,6 +2,7 @@ local peruse = require("peruse")
 local popup = require("plenary.popup")
 local utils = require("peruse.utils")
 local log = require("peruse.dev").log
+local marks = require("peruse").marks
 
 local M = {}
 
@@ -49,8 +50,6 @@ local function create_window()
         win_id = Peruse_win_id,
     }
 end
-
-local marks = {}
 
 
 local function not_in_marks(filename)
