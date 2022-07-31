@@ -9,6 +9,9 @@
 </div>
 
 
+:warning: Currently in pre-alpha - may have bugs or instability :warning: 
+
+
 ## The never-ending problem
 
 I want to move easily between buffers, without relying on complex plugins with a thousand features or thinking in advance about marking buffers to access them later.
