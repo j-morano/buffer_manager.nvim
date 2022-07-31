@@ -11,14 +11,14 @@
 
 ## The never-ending problem
 
-I want to move easily between buffers, without relying on heavy plugins with a thousand features or thinking in advance about marking buffers to access them later.
+I want to move easily between buffers, without relying on complex plugins with a thousand features or thinking in advance about marking buffers to access them later.
 
-And what about `:buffers<CR>:b<space>`? For me, it's not an option. Certain plugins cause the buffer ids to grow out of proportion. The same happens after hours of working on a project opening and closing files... Besides, remembering portions of filenames to access them seems to me to be an excessive mental overhead.
+And what about `:buffers<CR>:b<space>`? For me, it's not an option. Certain plugins cause the buffer ids to grow infinitely. The same happens after hours of working on a project opening and closing files... Thus, using ids to move between buffers is inconvenient. Besides, remembering portions of filenames to access the buffers seems to me to be an excessive mental overhead.
 
 
 ## The proposed solution
 
-Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just move to it and press `<CR>`.
+Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just hit its line number, or move to it and press `<CR>`.
 
 
 ## Installation
@@ -42,7 +42,7 @@ move to one of them, and open it with `<CR>`. _Finis_.
 
 ## Configuration
 
-peruse can be configured through the setup function:
+Peruse can be configured through the setup function:
 
 ```lua
 require("peruse").setup({ ... })
@@ -59,9 +59,9 @@ require("peruse").setup({ ... })
 
 ## Others
 
-### Use a dynamic width for the peruse popup menu
+### Use a dynamic width for the peruse pop-up menu
 
-Sometimes the default width of `60` is not wide enough.
+Sometimes the default width of (`60`) is not enough.
 The following example demonstrates how to configure a custom width by setting
 the menu's width relative to the current window's width.
 
@@ -79,4 +79,4 @@ require("peruse").setup({
 
 ## Acknowledgements
 
-This plugin is based on [Harpoon](https://github.com/ThePrimeagen/harpoon), an amazing plugin written by ThePrimeagen to easily navigate marked terminals and files.
+This plugin is based on [Harpoon](https://github.com/ThePrimeagen/harpoon), an amazing plugin written by ThePrimeagen to easily navigate previously marked terminals and files.
