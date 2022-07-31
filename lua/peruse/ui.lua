@@ -189,20 +189,7 @@ local function set_mark_list(new_list)
         end
         if was_deleted then
             vim.api.nvim_buf_delete(marks[idx].buf_id, {})
-        end
-    end
-    -- Check additions
-    for _, v in pairs(new_list) do
-        if type(v) == "string" then
-            local was_added = true
-            for idx = 1, #marks do
-                if marks[idx].filename == v then
-                    was_added = false
-                end
-            end
-            if was_added then
-                vim.api.nvim_command("badd " .. v)
-            end
+            marks[idx] = nil
         end
     end
 end
