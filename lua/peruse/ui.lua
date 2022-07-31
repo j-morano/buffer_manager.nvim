@@ -180,14 +180,16 @@ local function set_mark_list(new_list)
 
     -- Check deletions
     for idx = 1, #marks do
-        local was_deleted = true
+        local to_delete = true
         for _, v in pairs(new_list) do
             if marks[idx].filename == v then
-                was_deleted = false
+                to_delete = false
             end
         end
-        if was_deleted then
-            vim.api.nvim_buf_delete(marks[idx].buf_id, {})
+        if to_delete then
+            if vim.api.nvim_buf_is_valid(marks[idx].buf_id) then
+                vim.api.nvim_buf_delete(marks[idx].buf_id, {})
+            end
             marks[idx] = nil
         end
     end
