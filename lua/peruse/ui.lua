@@ -137,10 +137,13 @@ function M.toggle_quick_menu()
         )
     )
     -- Go to file hitting its line number
-    local str = "123456789"
+    local str = "1234567890"
     for i = 1, #str do
         local c = str:sub(i,i)
-        -- do something with c
+        local line = c
+        if c == "0" then
+            line = "10"
+        end
         vim.api.nvim_buf_set_keymap(
             Peruse_bufh,
             "n",
@@ -148,7 +151,7 @@ function M.toggle_quick_menu()
             string.format(
                 "<Cmd>%s <bar> lua require('peruse.ui')"..
                 ".select_menu_item()<CR>",
-                c
+                line
             ),
             {}
         )
