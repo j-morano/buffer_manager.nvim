@@ -1,12 +1,12 @@
 -- Don't include this file, we should manually include it via
--- require("peruse.dev").reload();
+-- require("buffer_manager.dev").reload();
 --
 -- A quick mapping can be setup using something like:
--- :nmap <leader>rr :lua require("peruse.dev").reload()<CR>
+-- :nmap <leader>rr :lua require("buffer_manager.dev").reload()<CR>
 local M = {}
 
 function M.reload()
-    require("plenary.reload").reload_module("peruse")
+    require("plenary.reload").reload_module("buffer_manager")
 end
 
 local log_levels = { "trace", "debug", "info", "warn", "error", "fatal" }
@@ -24,7 +24,7 @@ end
 
 local log_level = set_log_level()
 M.log = require("plenary.log").new({
-    plugin = "peruse",
+    plugin = "buffer_manager",
     level = log_level,
 })
 

@@ -1,8 +1,8 @@
-local peruse = require("peruse")
+local buffer_manager = require("buffer_manager")
 local popup = require("plenary.popup")
-local utils = require("peruse.utils")
-local log = require("peruse.dev").log
-local marks = require("peruse").marks
+local utils = require("buffer_manager.utils")
+local log = require("buffer_manager.dev").log
+local marks = require("buffer_manager").marks
 
 local M = {}
 
@@ -22,7 +22,7 @@ end
 
 local function create_window()
     log.trace("_create_window()")
-    local config = peruse.get_config()
+    local config = buffer_manager.get_config()
     local width = config.width or 60
     local height = config.height or 10
     local borderchars = config.borderchars
@@ -90,9 +90,9 @@ function M.toggle_quick_menu()
     end
 
     vim.api.nvim_win_set_option(Peruse_win_id, "number", true)
-    vim.api.nvim_buf_set_name(Peruse_bufh, "peruse-menu")
+    vim.api.nvim_buf_set_name(Peruse_bufh, "buffer_manager-menu")
     vim.api.nvim_buf_set_lines(Peruse_bufh, 0, #contents, false, contents)
-    vim.api.nvim_buf_set_option(Peruse_bufh, "filetype", "peruse")
+    vim.api.nvim_buf_set_option(Peruse_bufh, "filetype", "buffer_manager")
     vim.api.nvim_buf_set_option(Peruse_bufh, "buftype", "acwrite")
     vim.api.nvim_buf_set_option(Peruse_bufh, "bufhidden", "delete")
     vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
@@ -100,21 +100,21 @@ function M.toggle_quick_menu()
         Peruse_bufh,
         "n",
         "q",
-        "<Cmd>lua require('peruse.ui').toggle_quick_menu()<CR>",
+        "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
         { silent = true }
     )
     vim.api.nvim_buf_set_keymap(
         Peruse_bufh,
         "n",
         "<ESC>",
-        "<Cmd>lua require('peruse.ui').toggle_quick_menu()<CR>",
+        "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
         { silent = true }
     )
     vim.api.nvim_buf_set_keymap(
         Peruse_bufh,
         "n",
         "<CR>",
-        "<Cmd>lua require('peruse.ui').select_menu_item()<CR>",
+        "<Cmd>lua require('buffer_manager.ui').select_menu_item()<CR>",
         {}
     )
     vim.cmd(
@@ -125,12 +125,12 @@ function M.toggle_quick_menu()
     )
     vim.cmd(
         "autocmd BufLeave <buffer> ++nested ++once silent"..
-        " lua require('peruse.ui').toggle_quick_menu()"
+        " lua require('buffer_manager.ui').toggle_quick_menu()"
     )
     vim.cmd(
         string.format(
             "autocmd BufWriteCmd <buffer=%s>"..
-            " lua require('peruse.ui').on_menu_save()",
+            " lua require('buffer_manager.ui').on_menu_save()",
             Peruse_bufh
         )
     )
@@ -153,7 +153,7 @@ function M.toggle_quick_menu()
             "n",
             c,
             string.format(
-                "<Cmd>%s <bar> lua require('peruse.ui')"..
+                "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
                 ".select_menu_item()<CR>",
                 line
             ),

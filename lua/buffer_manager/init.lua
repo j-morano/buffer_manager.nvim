@@ -1,9 +1,9 @@
-local Dev = require("peruse.dev")
+local Dev = require("buffer_manager.dev")
 local log = Dev.log
 
 local M = {}
 
-PeruseConfig = PeruseConfig or {}
+BufferManagerConfig = BufferManagerConfig or {}
 
 M.marks = {}
 
@@ -22,14 +22,14 @@ function M.setup(config)
     --     ...
     -- }
 
-    PeruseConfig = config
-    log.debug("setup(): Config", PeruseConfig)
+    BufferManagerConfig = config
+    log.debug("setup(): Config", BufferManagerConfig)
 end
 
 
 function M.get_config()
     log.trace("get_config()")
-    return PeruseConfig or {}
+    return BufferManagerConfig or {}
 end
 
 -- Sets a default config with no values

@@ -1,6 +1,6 @@
 <div align="center">
 
-# peruse.nvim
+# `buffer_manager.nvim`
 ##### A simple plugin to easily navigate open buffers
 
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
@@ -28,49 +28,49 @@ Use a buffer-like floating window where all the open buffers are listed. To sele
 ## Installation
 
 * Neovim 0.5.0+ required
-* Install peruse using your favorite plugin manager. E.g. `Packer.nvim`:
+* Install `buffer_manager` using your favorite plugin manager. E.g. `Packer.nvim`:
 
 ```lua
 use 'nvim-lua/plenary.nvim'  -- basic dependency
-use 'sonarom/peruse.nvim'
+use 'sonarom/buffer_manager.nvim'
 ```
 
 ## Usage
 
 View all buffers using
 ```lua
-:lua require("peruse.ui").toggle_quick_menu()
+:lua require("buffer_manager.ui").toggle_quick_menu()
 ```
 move to one of them, and open it with `<CR>`. _Finis_.
 
 
 ## Configuration
 
-Peruse can be configured through the setup function:
+`buffer_manager` can be configured through the setup function:
 
 ```lua
-require("peruse").setup({ ... })
+require("buffer_manager").setup({ ... })
 ```
 
 
 ## Logging
 
-- Logs are written to `peruse.log` within the nvim cache path (`:echo stdpath("cache")`)
+- Logs are written to `buffer_manager.log` within the nvim cache path (`:echo stdpath("cache")`)
 - Available log levels are `trace`, `debug`, `info`, `warn`, `error`, or `fatal`. `warn` is default
-- Log level can be set with `vim.g.peruse_log_level` (must be **before** `setup()`)
-- Launching nvim with `PERUSE_LOG=debug nvim` takes precedence over `vim.g.peruse_log_level`.
+- Log level can be set with `vim.g.buffer_manager_log_level` (must be **before** `setup()`)
+- Launching nvim with `BUFFER_MANAGER_LOG=debug nvim` takes precedence over `vim.g.buffer_manager_log_level`.
 - Invalid values default back to `warn`.
 
 ## Others
 
-### Use a dynamic width for the peruse pop-up menu
+### Use a dynamic width for the `buffer_manager` pop-up menu
 
 Sometimes the default width of (`60`) is not enough.
 The following example demonstrates how to configure a custom width by setting
 the menu's width relative to the current window's width.
 
 ```lua
-require("peruse").setup({
+require("buffer_manager").setup({
     width = vim.api.nvim_win_get_width(0) - 4,
 })
 ```
