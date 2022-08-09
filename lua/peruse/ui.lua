@@ -135,6 +135,9 @@ function M.toggle_quick_menu()
         )
     )
     vim.cmd(
+        "setlocal completeopt=noinsert,menuone,noselect"
+    )
+    vim.cmd(
         "inoremap <buffer> <Tab> <C-x><C-f>"
     )
     -- Go to file hitting its line number
