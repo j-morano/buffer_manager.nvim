@@ -11,7 +11,7 @@ end
 
 local log_levels = { "trace", "debug", "info", "warn", "error", "fatal" }
 local function set_log_level()
-    local log_level = vim.env.PERUSE_LOG or vim.g.peruse_log_level
+    local log_level = vim.env.BUFFER_MANAGER_LOG or vim.g.buffer_manager_log_level
 
     for _, level in pairs(log_levels) do
         if level == log_level then

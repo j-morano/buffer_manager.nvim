@@ -6,18 +6,18 @@ local marks = require("buffer_manager").marks
 
 local M = {}
 
-Peruse_win_id = nil
-Peruse_bufh = nil
+Buffer_manager_win_id = nil
+Buffer_manager_bufh = nil
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
 local function close_menu(force_save)
     force_save = force_save or false
 
-    vim.api.nvim_win_close(Peruse_win_id, true)
+    vim.api.nvim_win_close(Buffer_manager_win_id, true)
 
-    Peruse_win_id = nil
-    Peruse_bufh = nil
+    Buffer_manager_win_id = nil
+    Buffer_manager_bufh = nil
 end
 
 local function create_window()
@@ -29,9 +29,9 @@ local function create_window()
         or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
     local bufnr = vim.api.nvim_create_buf(false, false)
 
-    local Peruse_win_id, win = popup.create(bufnr, {
+    local Buffer_manager_win_id, win = popup.create(bufnr, {
         title = "Buffers",
-        highlight = "PeruseWindow",
+        highlight = "BufferManagerWindow",
         line = math.floor(((vim.o.lines - height) / 2) - 1),
         col = math.floor((vim.o.columns - width) / 2),
         minwidth = width,
@@ -42,12 +42,12 @@ local function create_window()
     vim.api.nvim_win_set_option(
         win.border.win_id,
         "winhl",
-        "Normal:PeruseBorder"
+        "Normal:BufferManagerBorder"
     )
 
     return {
         bufnr = bufnr,
-        win_id = Peruse_win_id,
+        win_id = Buffer_manager_win_id,
     }
 end
 
@@ -55,7 +55,7 @@ end
 function M.toggle_quick_menu()
     log.trace("toggle_quick_menu()")
     local current_buf_id = 0
-    if Peruse_win_id ~= nil and vim.api.nvim_win_is_valid(Peruse_win_id) then
+    if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
         close_menu()
         return
     else
@@ -65,8 +65,8 @@ function M.toggle_quick_menu()
     local win_info = create_window()
     local contents = {}
 
-    Peruse_win_id = win_info.win_id
-    Peruse_bufh = win_info.bufnr
+    Buffer_manager_win_id = win_info.win_id
+    Buffer_manager_bufh = win_info.bufnr
 
     local buffers = vim.api.nvim_list_bufs()
 
@@ -89,29 +89,29 @@ function M.toggle_quick_menu()
         end
     end
 
-    vim.api.nvim_win_set_option(Peruse_win_id, "number", true)
-    vim.api.nvim_buf_set_name(Peruse_bufh, "buffer_manager-menu")
-    vim.api.nvim_buf_set_lines(Peruse_bufh, 0, #contents, false, contents)
-    vim.api.nvim_buf_set_option(Peruse_bufh, "filetype", "buffer_manager")
-    vim.api.nvim_buf_set_option(Peruse_bufh, "buftype", "acwrite")
-    vim.api.nvim_buf_set_option(Peruse_bufh, "bufhidden", "delete")
+    vim.api.nvim_win_set_option(Buffer_manager_win_id, "number", true)
+    vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
+    vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
     vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
     vim.api.nvim_buf_set_keymap(
-        Peruse_bufh,
+        Buffer_manager_bufh,
         "n",
         "q",
         "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
         { silent = true }
     )
     vim.api.nvim_buf_set_keymap(
-        Peruse_bufh,
+        Buffer_manager_bufh,
         "n",
         "<ESC>",
         "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
         { silent = true }
     )
     vim.api.nvim_buf_set_keymap(
-        Peruse_bufh,
+        Buffer_manager_bufh,
         "n",
         "<CR>",
         "<Cmd>lua require('buffer_manager.ui').select_menu_item()<CR>",
@@ -120,7 +120,7 @@ function M.toggle_quick_menu()
     vim.cmd(
         string.format(
             "autocmd BufModifiedSet <buffer=%s> set nomodified",
-            Peruse_bufh
+            Buffer_manager_bufh
         )
     )
     vim.cmd(
@@ -131,7 +131,7 @@ function M.toggle_quick_menu()
         string.format(
             "autocmd BufWriteCmd <buffer=%s>"..
             " lua require('buffer_manager.ui').on_menu_save()",
-            Peruse_bufh
+            Buffer_manager_bufh
         )
     )
     vim.cmd(
@@ -149,7 +149,7 @@ function M.toggle_quick_menu()
             line = "10"
         end
         vim.api.nvim_buf_set_keymap(
-            Peruse_bufh,
+            Buffer_manager_bufh,
             "n",
             c,
             string.format(
@@ -170,7 +170,7 @@ end
 
 local function get_menu_items()
     log.trace("_get_menu_items()")
-    local lines = vim.api.nvim_buf_get_lines(Peruse_bufh, 0, -1, true)
+    local lines = vim.api.nvim_buf_get_lines(Buffer_manager_bufh, 0, -1, true)
     local indices = {}
 
     for _, line in pairs(lines) do
