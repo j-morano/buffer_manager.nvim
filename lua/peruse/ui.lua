@@ -135,7 +135,7 @@ function M.toggle_quick_menu()
         )
     )
     vim.cmd(
-        "inoremap <Tab> <C-x><C-f>"
+        "inoremap <buffer> <Tab> <C-x><C-f>"
     )
     -- Go to file hitting its line number
     local str = "1234567890"
