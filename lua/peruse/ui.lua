@@ -83,9 +83,7 @@ function M.toggle_quick_menu()
                 current_buf_line = len
             end
             marks[len] = {
-                buf_id = buf_id,
                 filename = filename,
-                buf_name = buf_name,
             }
             contents[len] = string.format("%s", filename)
         end
@@ -136,6 +134,9 @@ function M.toggle_quick_menu()
             Peruse_bufh
         )
     )
+    vim.cmd(
+        "inoremap <Tab> <C-x><C-f>"
+    )
     -- Go to file hitting its line number
     local str = "1234567890"
     for i = 1, #str do
@@ -181,6 +182,25 @@ end
 local function set_mark_list(new_list)
     log.trace("set_mark_list(): New list:", new_list)
 
+    local new_marks = {}
+    -- Check additions
+    for line, v in pairs(new_list) do
+        if type(v) == "string" then
+            local was_added = true
+            for idx = 1, #marks do
+                if marks[idx].filename == v then
+                    was_added = false
+                end
+            end
+            if was_added then
+                vim.api.nvim_command("badd " .. v)
+            end
+            new_marks[line] = {
+                filename = v
+            }
+        end
+    end
+
     -- Check deletions
     for idx = 1, #marks do
         local to_delete = true
@@ -190,12 +210,10 @@ local function set_mark_list(new_list)
             end
         end
         if to_delete then
-            if vim.api.nvim_buf_is_valid(marks[idx].buf_id) then
-                vim.api.nvim_buf_delete(marks[idx].buf_id, {})
-            end
-            marks[idx] = nil
+            vim.cmd("bdelete " .. marks[idx].filename)
         end
     end
+    marks = new_marks
 end
 
 function M.on_menu_save()
@@ -210,8 +228,7 @@ function M.nav_file(id)
     if not mark then
         return
     else
-        vim.api.nvim_set_current_buf(mark.buf_id)
-        vim.api.nvim_buf_set_option(mark.buf_id, "buflisted", true)
+        vim.cmd("edit " .. mark.filename)
     end
 end
 
