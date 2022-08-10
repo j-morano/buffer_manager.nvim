@@ -4,10 +4,12 @@ local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
 
+
 local M = {}
 
 Buffer_manager_win_id = nil
 Buffer_manager_bufh = nil
+local initial_marks = nil
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
@@ -52,11 +54,42 @@ local function create_window()
 end
 
 
+function update_buffers()
+
+    -- Check deletions
+    for idx_i = 1, #initial_marks do
+        local to_delete = true
+        for idx_j = 1, #marks do
+            if initial_marks[idx_i].filename == marks[idx_j].filename then
+                to_delete = false
+            end
+        end
+        if to_delete then
+            local bufnr = vim.fn.bufnr(initial_marks[idx_i].filename)
+            if bufnr ~= -1 then
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                    vim.api.nvim_buf_delete(bufnr, {})
+                end
+            end
+        end
+    end
+
+    -- Check additions
+    for idx = 1, #marks do
+        vim.api.nvim_command("badd " .. marks[idx].filename)
+    end
+end
+
+
 function M.toggle_quick_menu()
     log.trace("toggle_quick_menu()")
     local current_buf_id = 0
     if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
-        close_menu()
+        if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
+            M.on_menu_save()
+        end
+        close_menu(true)
+        update_buffers()
         return
     else
         current_buf_id = vim.fn.bufnr()
@@ -64,6 +97,7 @@ function M.toggle_quick_menu()
 
     local win_info = create_window()
     local contents = {}
+    initial_marks = {}
 
     Buffer_manager_win_id = win_info.win_id
     Buffer_manager_bufh = win_info.bufnr
@@ -83,6 +117,9 @@ function M.toggle_quick_menu()
                 current_buf_line = len
             end
             marks[len] = {
+                filename = filename,
+            }
+            initial_marks[len] ={
                 filename = filename,
             }
             contents[len] = string.format("%s", filename)
@@ -169,6 +206,7 @@ function M.select_menu_item()
     end
     close_menu(true)
     M.nav_file(idx)
+    update_buffers()
 end
 
 local function get_menu_items()
@@ -188,38 +226,15 @@ end
 local function set_mark_list(new_list)
     log.trace("set_mark_list(): New list:", new_list)
 
-    local new_marks = {}
+    marks = {}
     -- Check additions
     for line, v in pairs(new_list) do
         if type(v) == "string" then
-            local was_added = true
-            for idx = 1, #marks do
-                if marks[idx].filename == v then
-                    was_added = false
-                end
-            end
-            if was_added then
-                vim.api.nvim_command("badd " .. v)
-            end
-            new_marks[line] = {
+            marks[line] = {
                 filename = v
             }
         end
     end
-
-    -- Check deletions
-    for idx = 1, #marks do
-        local to_delete = true
-        for _, v in pairs(new_list) do
-            if marks[idx].filename == v then
-                to_delete = false
-            end
-        end
-        if to_delete then
-            vim.cmd("bdelete " .. marks[idx].filename)
-        end
-    end
-    marks = new_marks
 end
 
 function M.on_menu_save()

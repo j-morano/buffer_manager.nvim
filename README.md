@@ -1,28 +1,24 @@
 <div align="center">
 
 # `buffer_manager.nvim`
-##### A simple plugin to easily navigate open buffers
+##### A simple plugin to easily manage Neovim buffers
 
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 
-:warning: Currently in pre-alpha - may have bugs or instability :warning: 
+:warning: Currently in alpha - may have bugs or instability :warning:
 
 </div>
 
 
 
-
 ## The never-ending problem
 
-I want to move easily between buffers, without relying on complex plugins with a thousand features or thinking in advance about marking buffers to access them later.
-
-And what about `:buffers<CR>:b<space>`? For me, it's not an option. Certain plugins cause the buffer ids to grow infinitely. The same happens after hours of working on a project opening and closing files... Thus, using ids to move between buffers is inconvenient. Besides, remembering portions of filenames to access the buffers seems to me to be an excessive mental overhead.
-
+I want to manage Neovim buffers easily, without the mental overhead of remembering its ids or partial names. Buffer management includes moving to a buffer and deleting/adding one or more buffers.
 
 ## The proposed solution
 
-Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just hit its line number, or move to it and press `<CR>`.
+Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just hit its line number, or move to it and press `<CR>`. To delete the buffer, delete it from the list. To add it (predictably) add a filename to the list.
 
 
 ## Installation
@@ -37,11 +33,22 @@ use 'sonarom/buffer_manager.nvim'
 
 ## Usage
 
-View all buffers using
+### View all buffers and go to a buffer
+
 ```lua
 :lua require("buffer_manager.ui").toggle_quick_menu()
 ```
-move to one of them, and open it with `<CR>`. _Finis_.
+
+Then, move to one of them, and open it with `<CR>`.
+Alternative: press the key corresponding to its line number (notice that, in this case, 0 maps to 10, since there is no 0 line).
+
+### Add buffer
+
+Write the filename of the new buffer (use `<Tab>` for completion).
+
+### Remove buffer
+
+Delete it in the buffer menu.
 
 
 ## Configuration
@@ -77,8 +84,7 @@ require("buffer_manager").setup({
 
 ## TODO
 
-### Actions on listed buffers
-* Add, delete, remove, etc.
+* Disable/enable automatic save.
 
 
 ## Acknowledgements
