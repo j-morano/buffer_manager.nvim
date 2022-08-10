@@ -164,6 +164,9 @@ end
 
 function M.select_menu_item()
     local idx = vim.fn.line(".")
+    if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
+        M.on_menu_save()
+    end
     close_menu(true)
     M.nav_file(idx)
 end
