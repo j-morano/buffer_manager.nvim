@@ -54,7 +54,7 @@ local function create_window()
 end
 
 
-function update_buffers()
+local function update_buffers()
 
     -- Check deletions
     for idx_i = 1, #initial_marks do
@@ -62,12 +62,14 @@ function update_buffers()
         for idx_j = 1, #marks do
             if initial_marks[idx_i].filename == marks[idx_j].filename then
                 to_delete = false
+                break
             end
         end
         if to_delete then
             local bufnr = vim.fn.bufnr(initial_marks[idx_i].filename)
             if bufnr ~= -1 then
                 if vim.api.nvim_buf_is_valid(bufnr) then
+                    vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
                     vim.api.nvim_buf_delete(bufnr, {})
                 end
             end
@@ -76,10 +78,10 @@ function update_buffers()
 
     -- Check additions
     for idx = 1, #marks do
-        local bufnr = vim.fn.bufnr(initial_marks[idx].filename)
+        local bufnr = vim.fn.bufnr(marks[idx].filename)
         -- Add buffer only if it does not already exist
         if bufnr == -1 then
-            vim.api.nvim_command("badd " .. marks[idx].filename)
+            vim.cmd("badd " .. marks[idx].filename)
         end
     end
 end
