@@ -76,7 +76,7 @@ function update_buffers()
 
     -- Check additions
     for idx = 1, #marks do
-        local bufnr = vim.fn.bufnr(marks[idx].filename)
+        local bufnr = vim.fn.bufnr(initial_marks[idx].filename)
         -- Add buffer only if it does not already exist
         if bufnr == -1 then
             vim.api.nvim_command("badd " .. marks[idx].filename)
