@@ -68,7 +68,7 @@ function update_buffers()
             local bufnr = vim.fn.bufnr(initial_marks[idx_i].filename)
             if bufnr ~= -1 then
                 if vim.api.nvim_buf_is_valid(bufnr) then
-                    vim.api.nvim_command("bdelete " .. bufnr)
+                    vim.api.nvim_buf_delete(bufnr, {})
                 end
             end
         end
