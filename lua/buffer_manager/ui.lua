@@ -53,6 +53,9 @@ local function create_window()
   }
 end
 
+local function string_starts(string, start)
+  return string.sub(string, 1, string.len(start)) == start
+end
 
 local function update_buffers()
 
@@ -66,8 +69,9 @@ local function update_buffers()
       end
     end
     if to_delete then
-      local bufnr = vim.fn.bufnr(initial_marks[idx_i].filename)
-      if bufnr ~= -1 then
+      local filename = initial_marks[idx_i].filename
+      local bufnr = vim.fn.bufnr(filename)
+      if not string_starts(filename, "term://") and bufnr ~= -1 then
         if vim.api.nvim_buf_is_valid(bufnr) then
           vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
           vim.api.nvim_buf_delete(bufnr, {})
