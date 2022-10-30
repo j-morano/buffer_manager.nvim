@@ -57,6 +57,14 @@ local function string_starts(string, start)
   return string.sub(string, 1, string.len(start)) == start
 end
 
+local function can_be_deleted(bufname, bufnr)
+  return (
+    not string_starts(bufname, "term://")
+    and not vim.fn.getbufinfo(bufnr)[1].changed
+    and bufnr ~= -1
+  )
+end
+
 local function update_buffers()
 
   -- Check deletions
@@ -71,7 +79,7 @@ local function update_buffers()
     if to_delete then
       local filename = initial_marks[idx_i].filename
       local bufnr = vim.fn.bufnr(filename)
-      if not string_starts(filename, "term://") and bufnr ~= -1 then
+      if can_be_deleted(filename, bufnr) then
         if vim.api.nvim_buf_is_valid(bufnr) then
           vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
           vim.api.nvim_buf_delete(bufnr, {})
