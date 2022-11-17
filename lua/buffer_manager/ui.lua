@@ -59,8 +59,9 @@ end
 
 local function can_be_deleted(bufname, bufnr)
   return (
-    not string_starts(bufname, "term://")
-    and not vim.fn.getbufinfo(bufnr)[1].changed
+    vim.api.nvim_buf_is_valid(bufnr)
+    and (not string_starts(bufname, "term://"))
+    and (not vim.bo[bufnr].modified)
     and bufnr ~= -1
   )
 end
@@ -80,10 +81,8 @@ local function update_buffers()
       local filename = initial_marks[idx_i].filename
       local bufnr = vim.fn.bufnr(filename)
       if can_be_deleted(filename, bufnr) then
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
-          vim.api.nvim_buf_delete(bufnr, {})
-        end
+        vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
+        vim.api.nvim_buf_delete(bufnr, {})
       end
     end
   end
