@@ -6,7 +6,7 @@
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 
-:warning: Currently in alpha - may have bugs or instability :warning:
+:warning: Currently in beta - may have bugs or instability :warning:
 
 </div>
 
@@ -90,3 +90,5 @@ require("buffer_manager").setup({
 ## Acknowledgements
 
 This plugin is based on [Harpoon](https://github.com/ThePrimeagen/harpoon), an amazing plugin written by ThePrimeagen to easily navigate previously marked terminals and files.
+
+Also, special thanks to [bufdelete.nvim](https://github.com/famiu/bufdelete.nvim), for showing how to remove buffers correctly.
