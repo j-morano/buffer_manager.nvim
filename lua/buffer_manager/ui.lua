@@ -33,7 +33,7 @@ local function create_window()
 
   local Buffer_manager_win_id, win = popup.create(bufnr, {
     title = "Buffers",
-    highlight = "BufferManagerWindow",
+    highlight = "Normal",
     line = math.floor(((vim.o.lines - height) / 2) - 1),
     col = math.floor((vim.o.columns - width) / 2),
     minwidth = width,
@@ -44,7 +44,7 @@ local function create_window()
   vim.api.nvim_win_set_option(
   win.border.win_id,
   "winhl",
-  "Normal:BufferManagerBorder"
+  "Normal:Normal"
   )
 
   return {
