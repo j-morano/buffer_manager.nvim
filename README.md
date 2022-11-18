@@ -10,7 +10,7 @@
 
 </div>
 
-![](assets/demo.gif)
+<img src="assets/demo.gif" width="280"/>
 
 
 ## The never-ending problem
