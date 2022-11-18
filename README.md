@@ -55,10 +55,10 @@ Delete it in the buffer menu.
 
 ## Configuration
 
-`buffer_manager` can be configured through the setup function:
 
-```lua
-require("buffer_manager").setup({ ... })
+### Example
+```
+map({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, opts)
 ```
 
 
