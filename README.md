@@ -44,7 +44,9 @@ Alternative: press the key corresponding to its line number (notice that, in thi
 
 ### Add buffer
 
-Write the filename of the new buffer (use `<Tab>` for completion).
+Write the filename of the new buffer.
+
+(Some people will find this useless, but I often use this functionality together with an autocomplete for files.)
 
 ### Remove buffer
 
