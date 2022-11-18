@@ -70,7 +70,7 @@ vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_qu
 - Launching nvim with `BUFFER_MANAGER_LOG=debug nvim` takes precedence over `vim.g.buffer_manager_log_level`.
 - Invalid values default back to `warn`.
 
-## Others
+<!--## Others
 
 ### Use a dynamic width for the `buffer_manager` pop-up menu
 
@@ -82,7 +82,7 @@ the menu's width relative to the current window's width.
 require("buffer_manager").setup({
     width = vim.api.nvim_win_get_width(0) - 4,
 })
-```
+``-->
 
 ## TODO
 
