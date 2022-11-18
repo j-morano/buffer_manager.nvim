@@ -28,7 +28,7 @@ Use a buffer-like floating window where all the open buffers are listed. To sele
 
 ```lua
 use 'nvim-lua/plenary.nvim'  -- basic dependency
-use 'sonarom/buffer_manager.nvim'
+use 'j-morano/buffer_manager.nvim'
 ```
 
 ## Usage
