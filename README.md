@@ -8,9 +8,9 @@
 
 :warning: Currently in beta - may have bugs or instability :warning:
 
-</div>
+<img src="assets/demo.gif" width="400"/>
 
-<img src="assets/demo.gif" width="280"/>
+</div>
 
 
 ## The never-ending problem
