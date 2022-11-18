@@ -10,6 +10,7 @@
 
 </div>
 
+![](assets/demo.gif)
 
 
 ## The never-ending problem
