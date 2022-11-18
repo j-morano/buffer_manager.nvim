@@ -58,7 +58,7 @@ Delete it in the buffer menu.
 
 ### Example
 ```
-map({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, {noremap = true})
+vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, {noremap = true})
 ```
 
 
