@@ -65,10 +65,12 @@ require("buffer_manager").setup({ })
 
 #### Available configuration options
 * `select_menu_item_commands`: Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
+* `line_keys`: keys bound to each line of the buffer menu, in order.
 
 #### Default configuration
 ```lua
   {
+    line_keys = "1234567890",
     select_menu_item_commands = {
       edit = {
         key = "<CR>",
@@ -77,9 +79,11 @@ require("buffer_manager").setup({ })
     }
   }
 ```
+
 #### Example configuration
 ```lua
 require("buffer_manager").setup({
+  line_keys = "",  -- deactivate line keybindings
   select_menu_item_commands = {
     v = {
       key = "V",

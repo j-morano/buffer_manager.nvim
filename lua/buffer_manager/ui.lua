@@ -192,7 +192,7 @@ function M.toggle_quick_menu()
     )
   )
   -- Go to file hitting its line number
-  local str = "1234567890"
+  local str = config.line_keys
   for i = 1, #str do
     local c = str:sub(i,i)
     vim.api.nvim_buf_set_keymap(

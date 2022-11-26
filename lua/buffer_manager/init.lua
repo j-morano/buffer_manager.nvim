@@ -33,7 +33,13 @@ end
 
 function M.setup(config)
   log.trace("setup(): Setting up...")
+
+  if not config then
+    config = {}
+  end
+
   local default_config = {
+    line_keys = "1234567890",
     select_menu_item_commands = {
       edit = {
         key = "<CR>",
@@ -42,13 +48,9 @@ function M.setup(config)
     }
   }
 
-  if not config then
-    config = default_config
-  else
-    config = merge_tables(config, default_config)
-  end
+  local complete_config = merge_tables(default_config, config)
 
-  BufferManagerConfig = config
+  BufferManagerConfig = complete_config
   log.debug("setup(): Config", BufferManagerConfig)
 end
 
