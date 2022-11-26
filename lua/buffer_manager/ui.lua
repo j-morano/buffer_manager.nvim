@@ -166,7 +166,6 @@ function M.toggle_quick_menu()
   )
   local config = buffer_manager.get_config()
   for _, value in pairs(config.select_menu_item_commands) do
-    print(value.command)
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,
       "n",
