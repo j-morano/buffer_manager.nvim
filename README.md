@@ -8,7 +8,7 @@
 
 :warning: Currently in beta - may have bugs or instability :warning:
 
-<img src="assets/demo.gif" width="720"/>
+<img src="assets/demo.gif" width="512"/>
 
 </div>
 
@@ -56,8 +56,47 @@ Delete it in the buffer menu.
 
 ## Configuration
 
+### Plugin configuration
 
-### Example
+The plugin can be configured through the setup function:
+```lua
+require("buffer_manager").setup({ })
+```
+
+#### Available configuration options
+* `select_menu_item_commands`: Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
+
+#### Default configuration
+```lua
+  {
+    select_menu_item_commands = {
+      edit = {
+        key = "<CR>",
+        command = "edit"
+      }
+    }
+  }
+```
+#### Example configuration
+```lua
+require("buffer_manager").setup({
+  select_menu_item_commands = {
+    v = {
+      key = "V",
+      command = "vsplit"
+    },
+    h = {
+      key = "H",
+      command = "split"
+    }
+  }
+})
+```
+
+
+### Example keybinding for opening the buffer menu
+
+To open the buffer menu, you can put this line in your Lua configuration file.
 ```lua
 vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, {noremap = true})
 ```

@@ -42,9 +42,9 @@ local function create_window()
   })
 
   vim.api.nvim_win_set_option(
-  win.border.win_id,
-  "winhl",
-  "Normal:Normal"
+    win.border.win_id,
+    "winhl",
+    "Normal:Normal"
   )
 
   return {
@@ -151,72 +151,72 @@ function M.toggle_quick_menu()
   vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
   vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
   vim.api.nvim_buf_set_keymap(
-  Buffer_manager_bufh,
-  "n",
-  "q",
-  "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
-  { silent = true }
+    Buffer_manager_bufh,
+    "n",
+    "q",
+    "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
+    { silent = true }
   )
   vim.api.nvim_buf_set_keymap(
-  Buffer_manager_bufh,
-  "n",
-  "<ESC>",
-  "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
-  { silent = true }
+    Buffer_manager_bufh,
+    "n",
+    "<ESC>",
+    "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
+    { silent = true }
   )
-  vim.api.nvim_buf_set_keymap(
-  Buffer_manager_bufh,
-  "n",
-  "<CR>",
-  "<Cmd>lua require('buffer_manager.ui').select_menu_item()<CR>",
-  {}
+  local config = buffer_manager.get_config()
+  for _, value in pairs(config.select_menu_item_commands) do
+    print(value.command)
+    vim.api.nvim_buf_set_keymap(
+      Buffer_manager_bufh,
+      "n",
+      value.key,
+      "<Cmd>lua require('buffer_manager.ui').select_menu_item('"..value.command.."')<CR>",
+      {}
+    )
+  end
+  vim.cmd(
+    string.format(
+      "autocmd BufModifiedSet <buffer=%s> set nomodified",
+      Buffer_manager_bufh
+    )
   )
   vim.cmd(
-  string.format(
-  "autocmd BufModifiedSet <buffer=%s> set nomodified",
-  Buffer_manager_bufh
-  )
+    "autocmd BufLeave <buffer> ++nested ++once silent"..
+    " lua require('buffer_manager.ui').toggle_quick_menu()"
   )
   vim.cmd(
-  "autocmd BufLeave <buffer> ++nested ++once silent"..
-  " lua require('buffer_manager.ui').toggle_quick_menu()"
-  )
-  vim.cmd(
-  string.format(
-  "autocmd BufWriteCmd <buffer=%s>"..
-  " lua require('buffer_manager.ui').on_menu_save()",
-  Buffer_manager_bufh
-  )
+    string.format(
+      "autocmd BufWriteCmd <buffer=%s>"..
+      " lua require('buffer_manager.ui').on_menu_save()",
+      Buffer_manager_bufh
+    )
   )
   -- Go to file hitting its line number
   local str = "1234567890"
   for i = 1, #str do
     local c = str:sub(i,i)
-    local line = c
-    if c == "0" then
-      line = "10"
-    end
     vim.api.nvim_buf_set_keymap(
-    Buffer_manager_bufh,
-    "n",
-    c,
-    string.format(
-    "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
-    ".select_menu_item()<CR>",
-    line
-    ),
-    {}
+      Buffer_manager_bufh,
+      "n",
+      c,
+      string.format(
+        "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
+        ".select_menu_item()<CR>",
+        i
+      ),
+      {}
     )
   end
 end
 
-function M.select_menu_item()
+function M.select_menu_item(command)
   local idx = vim.fn.line(".")
   if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
     M.on_menu_save()
   end
   close_menu(true)
-  M.nav_file(idx)
+  M.nav_file(idx, command)
   update_buffers()
 end
 
@@ -253,14 +253,17 @@ function M.on_menu_save()
   set_mark_list(get_menu_items())
 end
 
-function M.nav_file(id)
+function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
+  if command == nil then
+    command = "edit"
+  end
 
   local mark = marks[id]
   if not mark then
     return
   else
-    vim.cmd("edit " .. mark.filename)
+    vim.cmd(command .. " " .. mark.filename)
   end
 end
 

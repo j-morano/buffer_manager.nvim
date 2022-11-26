@@ -7,20 +7,46 @@ BufferManagerConfig = BufferManagerConfig or {}
 
 M.marks = {}
 
+-- tbl_deep_extend does not work the way you would think
+local function merge_table_impl(t1, t2)
+  for k, v in pairs(t2) do
+    if type(v) == "table" then
+      if type(t1[k]) == "table" then
+        merge_table_impl(t1[k], v)
+      else
+        t1[k] = v
+      end
+    else
+      t1[k] = v
+    end
+  end
+end
 
--- 1. saved.  Where do we save?
+local function merge_tables(...)
+  log.trace("_merge_tables()")
+  local out = {}
+  for i = 1, select("#", ...) do
+    merge_table_impl(out, select(i, ...))
+  end
+  return out
+end
+
 function M.setup(config)
   log.trace("setup(): Setting up...")
+  local default_config = {
+    select_menu_item_commands = {
+      edit = {
+        key = "<CR>",
+        command = "edit"
+      }
+    }
+  }
 
   if not config then
-    config = {}
+    config = default_config
+  else
+    config = merge_tables(config, default_config)
   end
-
-  -- TODO: add defaults here
-  -- config = {
-  --     borderchars = borderchars,
-  --     ...
-  -- }
 
   BufferManagerConfig = config
   log.debug("setup(): Config", BufferManagerConfig)
