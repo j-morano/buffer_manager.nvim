@@ -9,7 +9,7 @@ local M = {}
 
 Buffer_manager_win_id = nil
 Buffer_manager_bufh = nil
-local initial_marks = nil
+local initial_marks = {}
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
@@ -66,20 +66,23 @@ local function can_be_deleted(bufname, bufnr)
   )
 end
 
-local function update_buffers()
 
+local function is_buffer_in_marks(bufnr)
+  for idx = 1, #marks do
+    if marks[idx].buf_id == bufnr then
+      return true
+    end
+  end
+  return false
+end
+
+
+local function update_buffers()
   -- Check deletions
   for idx_i = 1, #initial_marks do
-    local to_delete = true
-    for idx_j = 1, #marks do
-      if initial_marks[idx_i].filename == marks[idx_j].filename then
-        to_delete = false
-        break
-      end
-    end
-    if to_delete then
+    if not is_buffer_in_marks(initial_marks[idx_i].buf_id) then
       local filename = initial_marks[idx_i].filename
-      local bufnr = vim.fn.bufnr(filename)
+      local bufnr = initial_marks[idx_i].buf_id
       if can_be_deleted(filename, bufnr) then
         vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
         vim.api.nvim_buf_delete(bufnr, {})
@@ -93,63 +96,13 @@ local function update_buffers()
     -- Add buffer only if it does not already exist
     if bufnr == -1 then
       vim.cmd("badd " .. marks[idx].filename)
+      marks[idx].buf_id = vim.fn.bufnr(marks[idx].filename)
     end
   end
 end
 
 
-function M.toggle_quick_menu()
-  log.trace("toggle_quick_menu()")
-  local current_buf_id = 0
-  if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
-    if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
-      M.on_menu_save()
-    end
-    close_menu(true)
-    update_buffers()
-    return
-  else
-    current_buf_id = vim.fn.bufnr()
-  end
-
-  local win_info = create_window()
-  local contents = {}
-  initial_marks = {}
-
-  Buffer_manager_win_id = win_info.win_id
-  Buffer_manager_bufh = win_info.bufnr
-
-  local buffers = vim.api.nvim_list_bufs()
-
-  local len = 0
-  local current_buf_line = 1
-  for idx = 1, #buffers do
-    local buf_id = buffers[idx]
-    local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    local filename = utils.normalize_path(buf_name)
-    -- if buffer is listed, then add to contents and marks
-    if 1 == vim.fn.buflisted(buf_id) and buf_name ~= "" then
-      len = len + 1
-      if buf_id == current_buf_id then
-        current_buf_line = len
-      end
-      marks[len] = {
-        filename = filename,
-      }
-      initial_marks[len] ={
-        filename = filename,
-      }
-      contents[len] = string.format("%s", filename)
-    end
-  end
-
-  vim.api.nvim_win_set_option(Buffer_manager_win_id, "number", true)
-  vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
-  vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
-  vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
+local function set_menu_keybindings()
   vim.api.nvim_buf_set_keymap(
     Buffer_manager_bufh,
     "n",
@@ -209,6 +162,84 @@ function M.toggle_quick_menu()
   end
 end
 
+
+local function set_buf_options(contents, current_buf_line)
+  vim.api.nvim_win_set_option(Buffer_manager_win_id, "number", true)
+  vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
+  vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)
+  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
+  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
+  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
+  vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
+end
+
+
+function M.toggle_quick_menu()
+  log.trace("toggle_quick_menu()")
+  if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
+    if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
+      M.on_menu_save()
+    end
+    close_menu(true)
+    update_buffers()
+    return
+  end
+  local current_buf_id = vim.fn.bufnr()
+
+  local win_info = create_window()
+  local contents = {}
+  initial_marks = {}
+
+  Buffer_manager_win_id = win_info.win_id
+  Buffer_manager_bufh = win_info.bufnr
+
+  local buffers = vim.api.nvim_list_bufs()
+
+  local len = #marks
+  local current_buf_line = 1
+  for idx = 1, #buffers do
+    local buf_id = buffers[idx]
+    local buf_name = vim.api.nvim_buf_get_name(buf_id)
+    local filename = utils.normalize_path(buf_name)
+    -- if buffer is listed, then add to contents and marks
+    if 1 == vim.fn.buflisted(buf_id)
+      and buf_name ~= ""
+      and not is_buffer_in_marks(buf_id)
+    then
+      len = len + 1
+      marks[len] = {
+        filename = filename,
+        buf_id = buf_id,
+      }
+    end
+  end
+  -- set initial_marks
+  local line = 1
+  for idx = 1, #marks do
+    local bufnr = vim.fn.bufnr(marks[idx].filename)
+    -- Add buffer only if it does not already exist
+    if bufnr == -1 then
+      marks[idx] = nil
+    else
+      local current_mark = marks[idx]
+      initial_marks[idx] = {
+        filename = current_mark.filename,
+        buf_id = current_mark.buf_id,
+      }
+      if current_mark.buf_id == current_buf_id then
+        current_buf_line = line
+      end
+      contents[idx] = string.format("%s", current_mark.filename)
+      line = line + 1
+    end
+  end
+
+  set_buf_options(contents, current_buf_line)
+  set_menu_keybindings()
+end
+
+
+
 function M.select_menu_item(command)
   local idx = vim.fn.line(".")
   if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
@@ -237,11 +268,11 @@ local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
   marks = {}
-  -- Check additions
   for line, v in pairs(new_list) do
     if type(v) == "string" then
       marks[line] = {
-        filename = v
+        filename = v,
+        buf_id = vim.fn.bufnr(v),
       }
     end
   end
