@@ -68,8 +68,8 @@ end
 
 
 local function is_buffer_in_marks(bufnr)
-  for idx = 1, #marks do
-    if marks[idx].buf_id == bufnr then
+  for _, mark in pairs(marks) do
+    if mark.buf_id == bufnr then
       return true
     end
   end
@@ -79,24 +79,22 @@ end
 
 local function update_buffers()
   -- Check deletions
-  for idx_i = 1, #initial_marks do
-    if not is_buffer_in_marks(initial_marks[idx_i].buf_id) then
-      local filename = initial_marks[idx_i].filename
-      local bufnr = initial_marks[idx_i].buf_id
-      if can_be_deleted(filename, bufnr) then
-        vim.api.nvim_buf_clear_namespace(bufnr, -1, 1, -1)
-        vim.api.nvim_buf_delete(bufnr, {})
+  for _, mark in pairs(initial_marks) do
+    if not is_buffer_in_marks(mark.buf_id) then
+      if can_be_deleted(mark.filename, mark.buf_id) then
+        vim.api.nvim_buf_clear_namespace(mark.buf_id, -1, 1, -1)
+        vim.api.nvim_buf_delete(mark.buf_id, {})
       end
     end
   end
 
   -- Check additions
-  for idx = 1, #marks do
-    local bufnr = vim.fn.bufnr(marks[idx].filename)
+  for idx, mark in pairs(marks) do
+    local bufnr = vim.fn.bufnr(mark.filename)
     -- Add buffer only if it does not already exist
     if bufnr == -1 then
-      vim.cmd("badd " .. marks[idx].filename)
-      marks[idx].buf_id = vim.fn.bufnr(marks[idx].filename)
+      vim.cmd("badd " .. mark.filename)
+      marks[idx].buf_id = vim.fn.bufnr(mark.filename)
     end
   end
 end
@@ -195,7 +193,6 @@ function M.toggle_quick_menu()
 
   local buffers = vim.api.nvim_list_bufs()
 
-  local len = #marks
   local current_buf_line = 1
   for idx = 1, #buffers do
     local buf_id = buffers[idx]
@@ -206,30 +203,31 @@ function M.toggle_quick_menu()
       and buf_name ~= ""
       and not is_buffer_in_marks(buf_id)
     then
-      len = len + 1
-      marks[len] = {
-        filename = filename,
-        buf_id = buf_id,
-      }
+      table.insert(
+        marks,
+        {
+          filename = filename,
+          buf_id = buf_id,
+        }
+      )
     end
   end
   -- set initial_marks
   local line = 1
-  for idx = 1, #marks do
-    local bufnr = vim.fn.bufnr(marks[idx].filename)
+  for idx, mark in pairs(marks) do
     -- Add buffer only if it does not already exist
-    if bufnr == -1 then
+    if vim.fn.buflisted(mark.buf_id) ~= 1 then
       marks[idx] = nil
     else
       local current_mark = marks[idx]
       initial_marks[idx] = {
-        filename = current_mark.filename,
+        filename = utils.normalize_path(current_mark.filename),
         buf_id = current_mark.buf_id,
       }
       if current_mark.buf_id == current_buf_id then
         current_buf_line = line
       end
-      contents[idx] = string.format("%s", current_mark.filename)
+      contents[line] = string.format("%s", initial_marks[idx].filename)
       line = line + 1
     end
   end
@@ -268,12 +266,12 @@ local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
   marks = {}
-  for line, v in pairs(new_list) do
+  for _, v in pairs(new_list) do
     if type(v) == "string" then
-      marks[line] = {
-        filename = v,
+      table.insert(marks, {
+        filename = utils.normalize_path(v),
         buf_id = vim.fn.bufnr(v),
-      }
+      })
     end
   end
 end
