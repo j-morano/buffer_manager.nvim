@@ -57,9 +57,9 @@ Delete it in the buffer menu.
 
 **Note:** the plugin does not remove terminal buffers or modified buffers.
 
-### Reorder buffers
+### Reorganize buffers
 
-The buffers can be reordered in any way. To do it, just move the name of the buffer to the chosen line.
+The buffers can be reorganized in any way. To do it, just move the name of the buffer to the chosen line.
 
 ## Configuration
 
