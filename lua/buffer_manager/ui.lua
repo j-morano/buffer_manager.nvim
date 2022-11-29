@@ -178,8 +178,8 @@ function M.toggle_quick_menu()
     if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
       M.on_menu_save()
     end
-    close_menu(true)
     update_buffers()
+    close_menu(true)
     return
   end
   local current_buf_id = vim.fn.bufnr()
@@ -197,7 +197,7 @@ function M.toggle_quick_menu()
   for idx = 1, #buffers do
     local buf_id = buffers[idx]
     local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    local filename = utils.normalize_path(buf_name)
+    local filename = buf_name
     -- if buffer is listed, then add to contents and marks
     if 1 == vim.fn.buflisted(buf_id)
       and buf_name ~= ""
@@ -221,13 +221,17 @@ function M.toggle_quick_menu()
     else
       local current_mark = marks[idx]
       initial_marks[idx] = {
-        filename = utils.normalize_path(current_mark.filename),
+        filename = current_mark.filename,
         buf_id = current_mark.buf_id,
       }
       if current_mark.buf_id == current_buf_id then
         current_buf_line = line
       end
-      contents[line] = string.format("%s", initial_marks[idx].filename)
+      local display_filename = current_mark.filename
+      if not string_starts(display_filename, "term://") then
+        display_filename = utils.normalize_path(display_filename)
+      end
+      contents[line] = string.format("%s", display_filename)
       line = line + 1
     end
   end
@@ -269,7 +273,7 @@ local function set_mark_list(new_list)
   for _, v in pairs(new_list) do
     if type(v) == "string" then
       table.insert(marks, {
-        filename = utils.normalize_path(v),
+        filename = v,
         buf_id = vim.fn.bufnr(v),
       })
     end
