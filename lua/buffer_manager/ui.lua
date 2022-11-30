@@ -82,7 +82,8 @@ local function update_buffers()
   for _, mark in pairs(initial_marks) do
     if not is_buffer_in_marks(mark.buf_id) then
       if can_be_deleted(mark.filename, mark.buf_id) then
-        vim.cmd("bdelete " .. mark.filename)
+        vim.api.nvim_buf_clear_namespace(mark.buf_id, -1, 1, -1)
+        vim.api.nvim_buf_delete(mark.buf_id, {})
       end
     end
   end
