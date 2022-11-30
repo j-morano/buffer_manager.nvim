@@ -49,10 +49,17 @@ Write the filename of the new buffer.
 
 (Some people will find this useless, but I often use this functionality together with an autocomplete for files.)
 
+Tip: you can use the Neovim built-in file autocomplete functionality (`<C-x><C-f>`) to ease the opening of new files.
+
 ### Remove buffer
 
 Delete it in the buffer menu.
 
+**Note:** the plugin does not remove terminal buffers or modified buffers.
+
+### Reorganize buffers
+
+The buffers can be reorganized in any way. To do it, just move the name of the buffer to the chosen line.
 
 ## Configuration
 
@@ -86,11 +93,11 @@ require("buffer_manager").setup({
   line_keys = "",  -- deactivate line keybindings
   select_menu_item_commands = {
     v = {
-      key = "V",
+      key = "<C-v>",
       command = "vsplit"
     },
     h = {
-      key = "H",
+      key = "<C-h>",
       command = "split"
     }
   }
