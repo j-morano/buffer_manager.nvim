@@ -112,6 +112,23 @@ To open the buffer menu, you can put this line in your Lua configuration file.
 vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, {noremap = true})
 ```
 
+### Other useful settings
+
+Since the buffer menu is just a buffer with the specific file type `buffer_manager`, you can define your own remaps using an autocmd for this filetype. For example, the following remaps allow to move a line up and down in visual mode with capital K and J, respectively.
+```vim
+autocmd FileType buffer_manager vnoremap J :m '>+1<CR>gv=gv
+autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
+```
+This is very useful for reorganizing the buffers.
+
+You can also set the previous autocmds with Lua as follows:
+```
+vim.api.nvim_command([[
+autocmd FileType buffer_manager vnoremap J :m '>+1<CR>gv=gv
+autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
+]])
+```
+
 
 ## Logging
 
@@ -133,12 +150,13 @@ the menu's width relative to the current window's width.
 require("buffer_manager").setup({
     width = vim.api.nvim_win_get_width(0) - 4,
 })
-``-->
+```
 
 ## TODO
 
 * Disable/enable automatic save.
 
+-->
 
 ## Acknowledgements
 
