@@ -6,9 +6,7 @@
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 
-
 https://user-images.githubusercontent.com/48717183/205488331-fbd939bf-d8e2-42bf-bea5-8956e2e02f51.mp4
-
 
 </div>
 
@@ -43,13 +41,15 @@ use 'j-morano/buffer_manager.nvim'
 Then, move to one of them, and open it with `<CR>`.
 Alternative: press the key corresponding to its line number (notice that, in this case, 0 maps to 10, since there is no 0 line).
 
-### Add buffer
+### Add buffer/Create file
 
 Write the filename of the new buffer.
 
 (Some people will find this useless, but I often use this functionality together with an autocomplete for files.)
 
 Tip: you can use the Neovim built-in file autocomplete functionality (`<C-x><C-f>`) to ease the opening of new files.
+
+If the file does not exist, a new empty buffer will be created, which will be written to the specified file when it is saved.
 
 ### Remove buffer
 
@@ -122,7 +122,7 @@ autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
 This is very useful for reorganizing the buffers.
 
 You can also set the previous autocmds with Lua as follows:
-```
+```lua
 vim.api.nvim_command([[
 autocmd FileType buffer_manager vnoremap J :m '>+1<CR>gv=gv
 autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
