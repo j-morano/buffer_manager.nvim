@@ -6,9 +6,9 @@
 [![Neovim](https://img.shields.io/badge/Neovim%200.5+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 
-:warning: Currently in beta - may have bugs or instability :warning:
 
-<img src="assets/demo.gif" width="720"/>
+https://user-images.githubusercontent.com/48717183/205488331-fbd939bf-d8e2-42bf-bea5-8956e2e02f51.mp4
+
 
 </div>
 
