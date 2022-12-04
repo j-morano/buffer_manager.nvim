@@ -158,6 +158,14 @@ require("buffer_manager").setup({
 
 -->
 
+## Contributing and reporting issues
+
+All contributions are welcome! Just open a pull request.
+
+Furthermore, feel free to open an issue if something is not working as expected.
+
+All feedback is appreciated!
+
 ## Acknowledgements
 
 This plugin is based on [Harpoon](https://github.com/ThePrimeagen/harpoon), an amazing plugin written by ThePrimeagen to easily navigate previously marked terminals and files.
