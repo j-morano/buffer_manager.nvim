@@ -10,7 +10,7 @@ https://user-images.githubusercontent.com/48717183/205488331-fbd939bf-d8e2-42bf-
 
 </div>
 
-## Important updates
+## :warning: Important updates
 
 To reduce the size of the repository, I have made some changes that could produce errors when updating the plugin if it was installed before these changes. One way to fix this is to reinstall the plugin completely (that is, remove and install).
 
