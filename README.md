@@ -64,6 +64,13 @@ Delete it in the buffer menu.
 
 The buffers can be reorganized in any way. To do it, just move the name of the buffer to the chosen line.
 
+### Go to next or previous buffer in the list
+
+```lua
+:lua require("buffer_manager.ui").nav_next()
+:lua require("buffer_manager.ui").nav_prev()
+```
+
 ## Configuration
 
 ### Plugin configuration

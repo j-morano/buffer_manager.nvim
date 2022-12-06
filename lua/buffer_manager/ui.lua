@@ -172,6 +172,29 @@ local function set_buf_options(contents, current_buf_line)
 end
 
 
+local function initialize_marks()
+  local buffers = vim.api.nvim_list_bufs()
+
+  for idx = 1, #buffers do
+    local buf_id = buffers[idx]
+    local buf_name = vim.api.nvim_buf_get_name(buf_id)
+    local filename = buf_name
+    -- if buffer is listed, then add to contents and marks
+    if 1 == vim.fn.buflisted(buf_id)
+      and buf_name ~= ""
+      and not is_buffer_in_marks(buf_id)
+    then
+      table.insert(
+        marks,
+        {
+          filename = filename,
+          buf_id = buf_id,
+        }
+      )
+    end
+  end
+end
+
 function M.toggle_quick_menu()
   log.trace("toggle_quick_menu()")
   if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
@@ -191,28 +214,10 @@ function M.toggle_quick_menu()
   Buffer_manager_win_id = win_info.win_id
   Buffer_manager_bufh = win_info.bufnr
 
-  local buffers = vim.api.nvim_list_bufs()
+  initialize_marks()
 
-  local current_buf_line = 1
-  for idx = 1, #buffers do
-    local buf_id = buffers[idx]
-    local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    local filename = buf_name
-    -- if buffer is listed, then add to contents and marks
-    if 1 == vim.fn.buflisted(buf_id)
-      and buf_name ~= ""
-      and not is_buffer_in_marks(buf_id)
-    then
-      table.insert(
-        marks,
-        {
-          filename = filename,
-          buf_id = buf_id,
-        }
-      )
-    end
-  end
   -- set initial_marks
+  local current_buf_line = 1
   local line = 1
   for idx, mark in pairs(marks) do
     -- Add buffer only if it does not already exist
@@ -286,6 +291,9 @@ function M.on_menu_save()
 end
 
 function M.nav_file(id, command)
+  if next(marks) == nil then
+    initialize_marks()
+  end
   log.trace("nav_file(): Navigating to", id)
   if command == nil then
     command = "edit"
@@ -297,6 +305,46 @@ function M.nav_file(id, command)
   else
     vim.cmd(command .. " " .. mark.filename)
   end
+end
+
+local function get_current_buf_line()
+  if next(marks) == nil then
+    initialize_marks()
+  end
+  local current_buf_id = vim.fn.bufnr()
+  for idx, mark in pairs(marks) do
+    if mark.buf_id == current_buf_id then
+      return idx
+    end
+  end
+  log.error("get_current_buf_line(): Could not find current buffer in marks")
+  return -1
+end
+
+function M.nav_next()
+  log.trace("nav_next()")
+  local current_buf_line = get_current_buf_line()
+  if current_buf_line == -1 then
+    return
+  end
+  local next_buf_line = current_buf_line + 1
+  if next_buf_line > #marks then
+    next_buf_line = 1
+  end
+  M.nav_file(next_buf_line)
+end
+
+function M.nav_prev()
+  log.trace("nav_prev()")
+  local current_buf_line = get_current_buf_line()
+  if current_buf_line == -1 then
+    return
+  end
+  local prev_buf_line = current_buf_line - 1
+  if prev_buf_line < 1 then
+    prev_buf_line = #marks
+  end
+  M.nav_file(prev_buf_line)
 end
 
 function M.location_window(options)
