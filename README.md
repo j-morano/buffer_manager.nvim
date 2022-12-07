@@ -83,6 +83,7 @@ require("buffer_manager").setup({ })
 #### Available configuration options
 * `select_menu_item_commands`: Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
 * `line_keys`: keys bound to each line of the buffer menu, in order.
+* `focus_alternate_buffer`: place the cursor over the alternate buffer instead of the current buffer.
 
 #### Default configuration
 ```lua
@@ -93,7 +94,8 @@ require("buffer_manager").setup({ })
         key = "<CR>",
         command = "edit"
       }
-    }
+    },
+    focus_alternate_buffer = false,
   }
 ```
 

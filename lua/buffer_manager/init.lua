@@ -45,7 +45,8 @@ function M.setup(config)
         key = "<CR>",
         command = "edit"
       }
-    }
+    },
+    focus_alternate_buffer = false,
   }
 
   local complete_config = merge_tables(default_config, config)

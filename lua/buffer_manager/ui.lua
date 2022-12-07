@@ -205,7 +205,14 @@ function M.toggle_quick_menu()
     update_buffers()
     return
   end
-  local current_buf_id = vim.fn.bufnr()
+  local config = buffer_manager.get_config()
+  local current_buf_id = -1
+  if config.focus_alternate_buffer then
+    current_buf_id = vim.fn.bufnr("#")
+  end
+  if current_buf_id == -1 then
+    current_buf_id = vim.fn.bufnr()
+  end
 
   local win_info = create_window()
   local contents = {}
