@@ -30,18 +30,22 @@ local function create_window()
   local height = 10
 
   if config then 
-    if config.width <= 1 then
-      local gwidth = vim.api.nvim_list_uis()[1].width
-      width = math.floor(gwidth * config.width)
-    else
-      width = config.width
+    if config.width ~= nil then
+      if config.width <= 1 then
+        local gwidth = vim.api.nvim_list_uis()[1].width
+        width = math.floor(gwidth * config.width)
+      else
+        width = config.width
+      end
     end
-
-    if config.height <= 1 then
-      local gheight = vim.api.nvim_list_uis()[1].height
-      height = math.floor(gheight * config.height)
-    else
-      height = config.height
+    
+    if config.heigth ~= nil then
+      if config.height <= 1 then
+        local gheight = vim.api.nvim_list_uis()[1].height
+        height = math.floor(gheight * config.height)
+      else
+        height = config.height
+      end
     end
   end
 
