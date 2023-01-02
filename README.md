@@ -134,7 +134,7 @@ vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_qu
 Since the buffer menu is just a buffer with the specific file type `buffer_manager`, you can define your own remaps using an autocmd for this filetype. For example, the following remaps allow to move a line up and down in visual mode with capital K and J, respectively.
 ```vim
 autocmd FileType buffer_manager vnoremap J :m '>+1<CR>gv=gv
-autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
+autocmd FileType buffer_manager vnoremap K :m '<-2<CR>gv=gv
 ```
 This is very useful for reorganizing the buffers.
 
@@ -142,7 +142,7 @@ You can also set the previous autocmds with Lua as follows:
 ```lua
 vim.api.nvim_command([[
 autocmd FileType buffer_manager vnoremap J :m '>+1<CR>gv=gv
-autocmd FileType buffer_manager vnoremap J :m '<-2<CR>gv=gv
+autocmd FileType buffer_manager vnoremap K :m '<-2<CR>gv=gv
 ]])
 ```
 
