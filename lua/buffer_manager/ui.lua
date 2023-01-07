@@ -1,3 +1,4 @@
+local Path = require("plenary.path")
 local buffer_manager = require("buffer_manager")
 local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
@@ -394,6 +395,50 @@ function M.location_window(options)
     bufnr = bufnr,
     win_id = win_id,
   }
+end
+
+function M.save_menu_to_file(filename)
+  log.trace("save_menu_to_file()")
+  if next(marks) == nil then
+    initialize_marks()
+  end
+  if filename == nil or filename == "" then
+    filename = vim.fn.input("Enter filename: ")
+    if filename == "" then
+      return
+    end
+  end
+  local file = io.open(filename, "w")
+  if file == nil then
+    log.error("save_menu_to_file(): Could not open file for writing")
+    return
+  end
+  for _, mark in pairs(marks) do
+    file:write(Path:new(mark.filename):absolute() .. "\n")
+  end
+  file:close()
+end
+
+function M.load_menu_from_file(filename)
+  log.trace("load_menu_from_file()")
+  if filename == nil or filename == "" then
+    filename = vim.fn.input("Enter filename: ")
+    if filename == "" then
+      return
+    end
+  end
+  local file = io.open(filename, "r")
+  if file == nil then
+    log.error("load_menu_from_file(): Could not open file for reading")
+    return
+  end
+  local lines = {}
+  for line in file:lines() do
+    table.insert(lines, line)
+  end
+  file:close()
+  set_mark_list(lines)
+  update_buffers()
 end
 
 

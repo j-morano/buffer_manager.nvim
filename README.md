@@ -71,6 +71,18 @@ The buffers can be reorganized in any way. To do it, just move the name of the b
 :lua require("buffer_manager.ui").nav_prev()
 ```
 
+### Save buffer list to a file or load it
+
+```lua
+# Prompt to manually introduce the file name
+require'buffer_manager.ui'.save_menu_to_file()
+require'buffer_manager.ui'.load_menu_from_file()
+
+# File name directly as an argument
+:lua require'buffer_manager.ui'.save_menu_to_file('bm')
+:lua require'buffer_manager.ui'.load_menu_from_file('bm')
+```
+
 ## Configuration
 
 ### Plugin configuration
