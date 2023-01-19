@@ -19,4 +19,9 @@ function M.is_white_space(str)
   return str:gsub("%s", "") == ""
 end
 
+function M.buffer_is_valid(buf_id, buf_name)
+    return 1 == vim.fn.buflisted(buf_id)
+      and buf_name ~= ""
+end
+
 return M

@@ -4,6 +4,7 @@ local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
+local buffer_is_valid = require("buffer_manager.utils").buffer_is_valid
 
 
 local M = {}
@@ -122,6 +123,36 @@ local function update_buffers()
   end
 end
 
+local function remove_mark(idx)
+  marks[idx] = nil
+  if idx < #marks then
+    for i = idx, #marks do
+      marks[i] = marks[i + 1]
+    end
+  end
+end
+
+local function update_marks()
+  -- Check if any buffer has been deleted
+  -- If so, remove it from marks
+  for idx, mark in pairs(marks) do
+    if not buffer_is_valid(mark.buf_id, mark.filename) then
+      remove_mark(idx)
+    end
+  end
+  -- Check if any buffer has been added
+  -- If so, add it to marks
+  for _, buf in pairs(vim.api.nvim_list_bufs()) do
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    if buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
+      table.insert(marks, {
+        filename = bufname,
+        buf_id = buf,
+      })
+    end
+  end
+end
+
 
 local function set_menu_keybindings()
   vim.api.nvim_buf_set_keymap(
@@ -195,29 +226,6 @@ local function set_buf_options(contents, current_buf_line)
 end
 
 
-local function initialize_marks()
-  local buffers = vim.api.nvim_list_bufs()
-
-  for idx = 1, #buffers do
-    local buf_id = buffers[idx]
-    local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    local filename = buf_name
-    -- if buffer is listed, then add to contents and marks
-    if 1 == vim.fn.buflisted(buf_id)
-      and buf_name ~= ""
-      and not is_buffer_in_marks(buf_id)
-    then
-      table.insert(
-        marks,
-        {
-          filename = filename,
-          buf_id = buf_id,
-        }
-      )
-    end
-  end
-end
-
 function M.toggle_quick_menu()
   log.trace("toggle_quick_menu()")
   if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
@@ -244,7 +252,7 @@ function M.toggle_quick_menu()
   Buffer_manager_win_id = win_info.win_id
   Buffer_manager_bufh = win_info.bufnr
 
-  initialize_marks()
+  update_marks()
 
   -- set initial_marks
   local current_buf_line = 1
@@ -321,9 +329,6 @@ function M.on_menu_save()
 end
 
 function M.nav_file(id, command)
-  if next(marks) == nil then
-    initialize_marks()
-  end
   log.trace("nav_file(): Navigating to", id)
   if command == nil then
     command = "edit"
@@ -338,9 +343,6 @@ function M.nav_file(id, command)
 end
 
 local function get_current_buf_line()
-  if next(marks) == nil then
-    initialize_marks()
-  end
   local current_buf_id = vim.fn.bufnr()
   for idx, mark in pairs(marks) do
     if mark.buf_id == current_buf_id then
@@ -353,6 +355,7 @@ end
 
 function M.nav_next()
   log.trace("nav_next()")
+  update_marks()
   local current_buf_line = get_current_buf_line()
   if current_buf_line == -1 then
     return
@@ -366,6 +369,7 @@ end
 
 function M.nav_prev()
   log.trace("nav_prev()")
+  update_marks()
   local current_buf_line = get_current_buf_line()
   if current_buf_line == -1 then
     return
@@ -399,9 +403,6 @@ end
 
 function M.save_menu_to_file(filename)
   log.trace("save_menu_to_file()")
-  if next(marks) == nil then
-    initialize_marks()
-  end
   if filename == nil or filename == "" then
     filename = vim.fn.input("Enter filename: ")
     if filename == "" then
