@@ -8,6 +8,9 @@ function M.project_key()
 end
 
 function M.normalize_path(item)
+  if string.find(item, ".*:///.*") ~= nil then
+      return Path:new(item)
+  end
   return Path:new(Path:new(item):absolute()):make_relative(M.project_key())
 end
 
