@@ -48,6 +48,7 @@ function M.setup(config)
     },
     focus_alternate_buffer = false,
     basename_only = false,
+    short_term_names = false,
   }
 
   local complete_config = merge_tables(default_config, config)

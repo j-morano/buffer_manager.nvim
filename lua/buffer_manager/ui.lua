@@ -4,9 +4,6 @@ local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
-local buffer_is_valid = require("buffer_manager.utils").buffer_is_valid
-local deep_copy = require("buffer_manager.utils").deep_copy
-local get_file_name = require("buffer_manager.utils").get_file_name
 
 
 local M = {}
@@ -148,7 +145,7 @@ local function update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
   for idx, mark in pairs(marks) do
-    if not buffer_is_valid(mark.buf_id, mark.filename) then
+    if not utils.buffer_is_valid(mark.buf_id, mark.filename) then
       remove_mark(idx)
     end
   end
@@ -156,7 +153,7 @@ local function update_marks()
   -- If so, add it to marks
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
     local bufname = vim.api.nvim_buf_get_name(buf)
-    if buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
+    if utils.buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
       table.insert(marks, {
         filename = bufname,
         buf_id = buf,
@@ -285,9 +282,13 @@ function M.toggle_quick_menu()
       local display_filename = current_mark.filename
       if not string_starts(display_filename, "term://") then
         if config.basename_only then
-          display_filename = get_file_name(display_filename)
+          display_filename = utils.get_file_name(display_filename)
         else
           display_filename = utils.normalize_path(display_filename)
+        end
+      else
+        if config.short_term_names then
+          display_filename = utils.get_short_term_name(display_filename)
         end
       end
       contents[line] = string.format("%s", display_filename)
@@ -328,18 +329,29 @@ end
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
-  local original_marks = deep_copy(marks)
+  local original_marks = utils.deep_copy(marks)
   marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
       local filename = v
-      local buf_id = vim.fn.bufnr(v)
-      -- Check if mark is already in the list
-      local current_mark = get_mark_by_bufnr(buf_id, original_marks)
-      -- if is not nil
-      if current_mark then
-        filename = current_mark.filename
-        -- buf_id = current_mark.buf_id
+      local buf_id = nil
+      if string_starts(filename, "term:") then
+        for _, mark in pairs(original_marks) do
+          if v == utils.get_short_term_name(mark.filename) then
+            filename = mark.filename
+            buf_id = mark.buf_id
+            break
+          end
+        end
+      else
+        buf_id = vim.fn.bufnr(v)
+        -- Check if mark is already in the list
+        local current_mark = get_mark_by_bufnr(buf_id, original_marks)
+        -- if is not nil
+        if current_mark then
+          filename = current_mark.filename
+          -- buf_id = current_mark.buf_id
+        end
       end
       table.insert(marks, {
         filename = filename,

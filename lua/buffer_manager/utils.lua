@@ -15,7 +15,11 @@ function M.normalize_path(item)
 end
 
 function M.get_file_name(file)
-      return file:match("[^/\\]*$")
+  return file:match("[^/\\]*$")
+end
+
+function M.get_short_term_name(term_name)
+  return term_name:gsub("://.*//", ":")
 end
 
 function M.absolute_path(item)
