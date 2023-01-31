@@ -100,6 +100,8 @@ require("buffer_manager").setup({ })
 * `focus_alternate_buffer`: place the cursor over the alternate buffer instead of the current buffer.
 * `width`: Width in columns (if > 1) or relative to window width (if <= 1).
 * `height`: Height in rows (if > 1) or relative to window height (if <= 1).
+* `basename_only`: Show only the basename of the buffer (filename+extension).
+* `short_term_names`: Shorten terminal buffer names.
 
 #### Default configuration
 ```lua
@@ -112,6 +114,8 @@ require("buffer_manager").setup({ })
       }
     },
     focus_alternate_buffer = false,
+    basename_only = false,
+    short_term_names = false,
   }
 ```
 
@@ -129,7 +133,8 @@ require("buffer_manager").setup({
       command = "split"
     }
   },
-  width = 0.8
+  width = 0.8,
+  short_term_names = true,
 })
 ```
 
