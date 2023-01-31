@@ -5,6 +5,8 @@ local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
 local buffer_is_valid = require("buffer_manager.utils").buffer_is_valid
+local deep_copy = require("buffer_manager.utils").deep_copy
+local get_file_name = require("buffer_manager.utils").get_file_name
 
 
 local M = {}
@@ -98,6 +100,16 @@ local function is_buffer_in_marks(bufnr)
     end
   end
   return false
+end
+
+
+local function get_mark_by_bufnr(bufnr, specific_marks)
+  for _, mark in pairs(specific_marks) do
+    if mark.buf_id == bufnr then
+      return mark
+    end
+  end
+  return nil
 end
 
 
@@ -272,7 +284,11 @@ function M.toggle_quick_menu()
       end
       local display_filename = current_mark.filename
       if not string_starts(display_filename, "term://") then
-        display_filename = utils.normalize_path(display_filename)
+        if config.basename_only then
+          display_filename = get_file_name(display_filename)
+        else
+          display_filename = utils.normalize_path(display_filename)
+        end
       end
       contents[line] = string.format("%s", display_filename)
       line = line + 1
@@ -312,12 +328,22 @@ end
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
+  local original_marks = deep_copy(marks)
   marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
+      local filename = v
+      local buf_id = vim.fn.bufnr(v)
+      -- Check if mark is already in the list
+      local current_mark = get_mark_by_bufnr(buf_id, original_marks)
+      -- if is not nil
+      if current_mark then
+        filename = current_mark.filename
+        -- buf_id = current_mark.buf_id
+      end
       table.insert(marks, {
-        filename = v,
-        buf_id = vim.fn.bufnr(v),
+        filename = filename,
+        buf_id = buf_id,
       })
     end
   end
