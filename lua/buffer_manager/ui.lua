@@ -11,6 +11,7 @@ local M = {}
 Buffer_manager_win_id = nil
 Buffer_manager_bufh = nil
 local initial_marks = {}
+local config = buffer_manager.get_config()
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
@@ -25,7 +26,6 @@ end
 
 local function create_window()
   log.trace("_create_window()")
-  local config = buffer_manager.get_config()
 
   local width = 60
   local height = 10
@@ -100,9 +100,20 @@ local function is_buffer_in_marks(bufnr)
 end
 
 
-local function get_mark_by_bufnr(bufnr, specific_marks)
+local function get_mark_by_name(name, specific_marks)
+  local ref_name = nil
   for _, mark in pairs(specific_marks) do
-    if mark.buf_id == bufnr then
+    ref_name = mark.filename
+    if string_starts(mark.filename, "term:") then
+      if config.short_term_names then
+        ref_name = utils.get_short_term_name(mark.filename)
+      end
+    else
+      if config.basename_only then
+        ref_name = utils.get_file_name(mark.filename)
+      end
+    end
+    if name == ref_name then
       return mark
     end
   end
@@ -178,7 +189,6 @@ local function set_menu_keybindings()
     "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
     { silent = true }
   )
-  local config = buffer_manager.get_config()
   for _, value in pairs(config.select_menu_item_commands) do
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,
@@ -245,12 +255,10 @@ function M.toggle_quick_menu()
     update_buffers()
     return
   end
-  local config = buffer_manager.get_config()
   local current_buf_id = -1
   if config.focus_alternate_buffer then
     current_buf_id = vim.fn.bufnr("#")
-  end
-  if current_buf_id == -1 then
+  else
     current_buf_id = vim.fn.bufnr()
   end
 
@@ -335,23 +343,12 @@ local function set_mark_list(new_list)
     if type(v) == "string" then
       local filename = v
       local buf_id = nil
-      if string_starts(filename, "term:") then
-        for _, mark in pairs(original_marks) do
-          if v == utils.get_short_term_name(mark.filename) then
-            filename = mark.filename
-            buf_id = mark.buf_id
-            break
-          end
-        end
+      local current_mark = get_mark_by_name(filename, original_marks)
+      if current_mark then
+        filename = current_mark.filename
+        buf_id = current_mark.buf_id
       else
         buf_id = vim.fn.bufnr(v)
-        -- Check if mark is already in the list
-        local current_mark = get_mark_by_bufnr(buf_id, original_marks)
-        -- if is not nil
-        if current_mark then
-          filename = current_mark.filename
-          -- buf_id = current_mark.buf_id
-        end
       end
       table.insert(marks, {
         filename = filename,
