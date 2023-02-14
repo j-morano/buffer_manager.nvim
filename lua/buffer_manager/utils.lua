@@ -28,8 +28,12 @@ function M.get_short_file_name(file)
   for _ in string.gmatch(file, "/") do
     slash_count = slash_count + 1
   end
-  -- Return the file name preceded by the number of slashes
-  return slash_count .. "/" .. M.get_file_name(file)
+  if slash_count == 0 then
+    return M.get_file_name(file)
+  else
+    -- Return the file name preceded by the number of slashes
+    return slash_count .. "/" .. M.get_file_name(file)
+  end
 end
 
 function M.get_short_term_name(term_name)
