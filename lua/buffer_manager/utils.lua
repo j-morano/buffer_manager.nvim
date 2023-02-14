@@ -18,6 +18,20 @@ function M.get_file_name(file)
   return file:match("[^/\\]*$")
 end
 
+function M.get_short_file_name(file)
+  -- Get normalized file path
+  file = M.normalize_path(file)
+  -- File to string
+  file = tostring(file)
+  -- Count the number of slashes in the relative file path
+  local slash_count = 0
+  for _ in string.gmatch(file, "/") do
+    slash_count = slash_count + 1
+  end
+  -- Return the file name preceded by the number of slashes
+  return slash_count .. "/" .. M.get_file_name(file)
+end
+
 function M.get_short_term_name(term_name)
   return term_name:gsub("://.*//", ":")
 end

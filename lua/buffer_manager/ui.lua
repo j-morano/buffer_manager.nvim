@@ -109,8 +109,8 @@ local function get_mark_by_name(name, specific_marks)
         ref_name = utils.get_short_term_name(mark.filename)
       end
     else
-      if config.basename_only then
-        ref_name = utils.get_file_name(mark.filename)
+      if config.short_file_names then
+        ref_name = utils.get_short_file_name(mark.filename)
       end
     end
     if name == ref_name then
@@ -289,8 +289,8 @@ function M.toggle_quick_menu()
       end
       local display_filename = current_mark.filename
       if not string_starts(display_filename, "term://") then
-        if config.basename_only then
-          display_filename = utils.get_file_name(display_filename)
+        if config.short_file_names then
+          display_filename = utils.get_short_file_name(display_filename)
         else
           display_filename = utils.normalize_path(display_filename)
         end

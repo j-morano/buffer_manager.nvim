@@ -100,7 +100,7 @@ require("buffer_manager").setup({ })
 * `focus_alternate_buffer`: place the cursor over the alternate buffer instead of the current buffer.
 * `width`: Width in columns (if > 1) or relative to window width (if <= 1).
 * `height`: Height in rows (if > 1) or relative to window height (if <= 1).
-* `basename_only`: Show only the basename of the buffer (filename+extension).
+* `short_file_names`: Shorten buffer names: filename+extension, preceeded by the number of levels under the current dir and a slash.
 * `short_term_names`: Shorten terminal buffer names.
 
 #### Default configuration
@@ -114,7 +114,7 @@ require("buffer_manager").setup({ })
       }
     },
     focus_alternate_buffer = false,
-    basename_only = false,
+    short_file_names = false,
     short_term_names = false,
   }
 ```

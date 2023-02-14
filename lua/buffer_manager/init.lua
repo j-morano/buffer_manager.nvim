@@ -47,7 +47,7 @@ function M.setup(config)
       }
     },
     focus_alternate_buffer = false,
-    basename_only = false,
+    short_file_names = false,
     short_term_names = false,
   }
 
