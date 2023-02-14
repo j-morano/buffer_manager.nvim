@@ -32,7 +32,7 @@ function M.get_short_file_name(file)
     return M.get_file_name(file)
   else
     -- Return the file name preceded by the number of slashes
-    return slash_count .. "/" .. M.get_file_name(file)
+    return slash_count .. "|" .. M.get_file_name(file)
   end
 end
 
