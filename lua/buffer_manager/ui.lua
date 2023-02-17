@@ -4,7 +4,6 @@ local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
-local buffer_is_valid = require("buffer_manager.utils").buffer_is_valid
 
 
 local M = {}
@@ -12,6 +11,7 @@ local M = {}
 Buffer_manager_win_id = nil
 Buffer_manager_bufh = nil
 local initial_marks = {}
+local config = buffer_manager.get_config()
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
@@ -26,7 +26,6 @@ end
 
 local function create_window()
   log.trace("_create_window()")
-  local config = buffer_manager.get_config()
 
   local width = 60
   local height = 10
@@ -101,6 +100,27 @@ local function is_buffer_in_marks(bufnr)
 end
 
 
+local function get_mark_by_name(name, specific_marks)
+  local ref_name = nil
+  for _, mark in pairs(specific_marks) do
+    ref_name = mark.filename
+    if string_starts(mark.filename, "term:") then
+      if config.short_term_names then
+        ref_name = utils.get_short_term_name(mark.filename)
+      end
+    else
+      if config.short_file_names then
+        ref_name = utils.get_short_file_name(mark.filename)
+      end
+    end
+    if name == ref_name then
+      return mark
+    end
+  end
+  return nil
+end
+
+
 local function update_buffers()
   -- Check deletions
   for _, mark in pairs(initial_marks) do
@@ -136,7 +156,7 @@ local function update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
   for idx, mark in pairs(marks) do
-    if not buffer_is_valid(mark.buf_id, mark.filename) then
+    if not utils.buffer_is_valid(mark.buf_id, mark.filename) then
       remove_mark(idx)
     end
   end
@@ -144,7 +164,7 @@ local function update_marks()
   -- If so, add it to marks
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
     local bufname = vim.api.nvim_buf_get_name(buf)
-    if buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
+    if utils.buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
       table.insert(marks, {
         filename = bufname,
         buf_id = buf,
@@ -169,7 +189,6 @@ local function set_menu_keybindings()
     "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
     { silent = true }
   )
-  local config = buffer_manager.get_config()
   for _, value in pairs(config.select_menu_item_commands) do
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,
@@ -236,12 +255,10 @@ function M.toggle_quick_menu()
     update_buffers()
     return
   end
-  local config = buffer_manager.get_config()
   local current_buf_id = -1
   if config.focus_alternate_buffer then
     current_buf_id = vim.fn.bufnr("#")
-  end
-  if current_buf_id == -1 then
+  else
     current_buf_id = vim.fn.bufnr()
   end
 
@@ -272,7 +289,15 @@ function M.toggle_quick_menu()
       end
       local display_filename = current_mark.filename
       if not string_starts(display_filename, "term://") then
-        display_filename = utils.normalize_path(display_filename)
+        if config.short_file_names then
+          display_filename = utils.get_short_file_name(display_filename)
+        else
+          display_filename = utils.normalize_path(display_filename)
+        end
+      else
+        if config.short_term_names then
+          display_filename = utils.get_short_term_name(display_filename)
+        end
       end
       contents[line] = string.format("%s", display_filename)
       line = line + 1
@@ -312,12 +337,22 @@ end
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
+  local original_marks = utils.deep_copy(marks)
   marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
+      local filename = v
+      local buf_id = nil
+      local current_mark = get_mark_by_name(filename, original_marks)
+      if current_mark then
+        filename = current_mark.filename
+        buf_id = current_mark.buf_id
+      else
+        buf_id = vim.fn.bufnr(v)
+      end
       table.insert(marks, {
-        filename = v,
-        buf_id = vim.fn.bufnr(v),
+        filename = filename,
+        buf_id = buf_id,
       })
     end
   end
