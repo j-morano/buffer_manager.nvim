@@ -10,9 +10,6 @@ https://user-images.githubusercontent.com/48717183/205488331-fbd939bf-d8e2-42bf-
 
 </div>
 
-## :warning: Important updates
-
-To reduce the size of the repository, I have made some changes that could produce errors when updating the plugin if it was installed before these changes. One way to fix this is to reinstall the plugin completely (that is, remove and install).
 
 ## The never-ending problem
 
@@ -95,6 +92,7 @@ require("buffer_manager").setup({ })
 ```
 
 #### Available configuration options
+
 * `select_menu_item_commands`: Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
 * `line_keys`: keys bound to each line of the buffer menu, in order.
 * `focus_alternate_buffer`: place the cursor over the alternate buffer instead of the current buffer.
@@ -104,6 +102,7 @@ require("buffer_manager").setup({ })
 * `short_term_names`: Shorten terminal buffer names.
 
 #### Default configuration
+
 ```lua
   {
     line_keys = "1234567890",
@@ -120,9 +119,12 @@ require("buffer_manager").setup({ })
 ```
 
 #### Example configuration
+
 ```lua
+local opts = {noremap = true}
+local map = vim.keymap.set
+-- Setup
 require("buffer_manager").setup({
-  line_keys = "",  -- deactivate line keybindings
   select_menu_item_commands = {
     v = {
       key = "<C-v>",
@@ -133,20 +135,38 @@ require("buffer_manager").setup({
       command = "split"
     }
   },
-  width = 0.8,
+  short_file_names = true,
   short_term_names = true,
 })
+-- Navigate buffers bypassing the menu
+local bmui = require("buffer_manager.ui")
+local keys = '1234567890'
+for i = 1, #keys do
+  local key = keys:sub(i,i)
+  map(
+    'n',
+    string.format('<leader>%s', key),
+    function () bmui.nav_file(i) end,
+    opts
+  )
+end
+-- Just the menu
+map({ 't', 'n' }, '<M-Space>', bmui.toggle_quick_menu, opts)
+-- Open menu and search
+map({ 't', 'n' }, '<M-m>', function ()
+  bmui.toggle_quick_menu()
+  -- wait for the menu to open
+  vim.defer_fn(function ()
+    vim.fn.feedkeys('/')
+  end, 50)
+end, opts)
+-- Next/Prev
+map('n', '<M-j>', bmui.nav_next, opts)
+map('n', '<M-k>', bmui.nav_prev, opts)
 ```
 
 
-### Example keybinding for opening the buffer menu
-
-To open the buffer menu, you can put this line in your Lua configuration file.
-```lua
-vim.keymap.set({ 't', 'n' }, '<M-Space>', require("buffer_manager.ui").toggle_quick_menu, {noremap = true})
-```
-
-### Other useful settings
+### Useful settings
 
 #### Reorder buffers
 
@@ -165,23 +185,6 @@ autocmd FileType buffer_manager vnoremap K :m '<-2<CR>gv=gv
 ]])
 ```
 
-#### Navigate buffers without opening the menu
-
-You can define custom keybindings for navigating buffers without opening the menu, but respecting the order in which the buffers appear in it.
-
-```lua
-local keys = '1234567890'
-for i = 1, #keys do
-  local key = keys:sub(i,i)
-  map(
-    'n',
-    string.format('<leader>%s', key),
-    function () require("buffer_manager.ui").nav_file(i) end,
-    opts
-  )
-end
-```
-
 ## Logging
 
 - Logs are written to `buffer_manager.log` within the nvim cache path (`:echo stdpath("cache")`)
@@ -190,25 +193,6 @@ end
 - Launching nvim with `BUFFER_MANAGER_LOG=debug nvim` takes precedence over `vim.g.buffer_manager_log_level`.
 - Invalid values default back to `warn`.
 
-<!--## Others
-
-### Use a dynamic width for the `buffer_manager` pop-up menu
-
-Sometimes the default width of (`60`) is not enough.
-The following example demonstrates how to configure a custom width by setting
-the menu's width relative to the current window's width.
-
-```lua
-require("buffer_manager").setup({
-    width = vim.api.nvim_win_get_width(0) - 4,
-})
-```
-
-## TODO
-
-* Disable/enable automatic save.
-
--->
 
 ## Contributing and reporting issues
 
