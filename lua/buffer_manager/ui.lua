@@ -54,21 +54,26 @@ local function create_window()
   or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
   local bufnr = vim.api.nvim_create_buf(false, false)
 
-  local Buffer_manager_win_id, win = popup.create(bufnr, {
+  local win_config = {
     title = "Buffers",
-    highlight = "Normal",
     line = math.floor(((vim.o.lines - height) / 2) - 1),
     col = math.floor((vim.o.columns - width) / 2),
     minwidth = width,
     minheight = height,
     borderchars = borderchars,
-  })
+  }
+  if config.highlight ~= "" then
+    win_config["highlight"] = config.highlight
+  end
+  local Buffer_manager_win_id, win = popup.create(bufnr, win_config)
 
-  vim.api.nvim_win_set_option(
-    win.border.win_id,
-    "winhl",
-    "Normal:Normal"
-  )
+  if config.highlight ~= "" then
+    vim.api.nvim_win_set_option(
+      win.border.win_id,
+      "winhl",
+      config.highlight .. ":" .. config.highlight
+    )
+  end
 
   return {
     bufnr = bufnr,

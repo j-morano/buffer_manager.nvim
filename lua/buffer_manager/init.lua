@@ -49,6 +49,7 @@ function M.setup(config)
     focus_alternate_buffer = false,
     short_file_names = false,
     short_term_names = false,
+    highlight = "Normal",
   }
 
   local complete_config = merge_tables(default_config, config)
