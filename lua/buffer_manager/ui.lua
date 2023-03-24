@@ -384,11 +384,16 @@ end
 
 function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
-  if command == nil then
-    command = "edit"
-  end
 
   local mark = marks[id]
+  -- Check if buffer exists by filename
+  if command == nil then
+    if vim.fn.bufnr(mark.filename) ~= -1 then
+      command = "buffer"
+    else
+      command = "edit"
+    end
+  end
   if not mark then
     return
   else
