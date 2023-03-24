@@ -279,6 +279,7 @@ function M.toggle_quick_menu()
   -- set initial_marks
   local current_buf_line = 1
   local line = 1
+  local modfied_lines = {}
   for idx, mark in pairs(marks) do
     -- Add buffer only if it does not already exist
     if vim.fn.buflisted(mark.buf_id) ~= 1 then
@@ -289,6 +290,9 @@ function M.toggle_quick_menu()
         filename = current_mark.filename,
         buf_id = current_mark.buf_id,
       }
+      if vim.bo[current_mark.buf_id].modified then
+        table.insert(modfied_lines, line)
+      end
       if current_mark.buf_id == current_buf_id then
         current_buf_line = line
       end
@@ -311,6 +315,16 @@ function M.toggle_quick_menu()
 
   set_buf_options(contents, current_buf_line)
   set_menu_keybindings()
+  for _, modified_line in pairs(modfied_lines) do
+    vim.api.nvim_buf_add_highlight(
+      Buffer_manager_bufh,
+      -1,
+      "BufferManagerModified",
+      modified_line-1,
+      0,
+      -1
+    )
+  end
 end
 
 
