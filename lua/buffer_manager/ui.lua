@@ -390,14 +390,16 @@ function M.nav_file(id, command)
     return
   end
   if command == nil or command == "edit" then
+    local bufnr = vim.fn.bufnr(mark.filename)
     -- Check if buffer exists by filename
-    if vim.fn.bufnr(mark.filename) ~= -1 then
-      command = "buffer"
+    if bufnr ~= -1 then
+      vim.cmd("buffer " .. bufnr)
     else
-      command = "edit"
+      vim.cmd("edit " .. mark.filename)
     end
+  else
+    vim.cmd(command .. " " .. mark.filename)
   end
-  vim.cmd(command .. " " .. mark.filename)
 end
 
 local function get_current_buf_line()
