@@ -50,6 +50,7 @@ function M.setup(config)
     short_file_names = false,
     short_term_names = false,
     highlight = "Normal",
+    win_extra_options = {},
   }
 
   local complete_config = merge_tables(default_config, config)

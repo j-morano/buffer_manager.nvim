@@ -239,8 +239,11 @@ local function set_menu_keybindings()
 end
 
 
-local function set_buf_options(contents, current_buf_line)
+local function set_win_buf_options(contents, current_buf_line)
   vim.api.nvim_win_set_option(Buffer_manager_win_id, "number", true)
+  for key, value in pairs(config.win_extra_options) do
+    vim.api.nvim_win_set_option(Buffer_manager_win_id, key, value)
+  end
   vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
   vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)
   vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
@@ -313,7 +316,7 @@ function M.toggle_quick_menu()
     end
   end
 
-  set_buf_options(contents, current_buf_line)
+  set_win_buf_options(contents, current_buf_line)
   set_menu_keybindings()
   for _, modified_line in pairs(modfied_lines) do
     vim.api.nvim_buf_add_highlight(

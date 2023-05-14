@@ -100,6 +100,8 @@ require("buffer_manager").setup({ })
 * `height`: Height in rows (if > 1) or relative to window height (if <= 1).
 * `short_file_names`: Shorten buffer names: filename+extension, preceeded by the number of levels under the current dir and a slash.
 * `short_term_names`: Shorten terminal buffer names.
+* `highlight`: highlight for the window border.
+* `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`.
 
 #### Default configuration
 
@@ -115,6 +117,8 @@ require("buffer_manager").setup({ })
     focus_alternate_buffer = false,
     short_file_names = false,
     short_term_names = false,
+    highlight = "Normal",
+    win_extra_options = {},
   }
 ```
 
