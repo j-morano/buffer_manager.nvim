@@ -387,6 +387,7 @@ end
 
 function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
+  update_marks()
 
   local mark = marks[id]
   if not mark then
