@@ -426,9 +426,12 @@ function M.nav_next()
   end
   local next_buf_line = current_buf_line + 1
   if next_buf_line > #marks then
-    next_buf_line = 1
+    if config.loop_nav then
+      M.nav_file(1)
+    end
+  else
+    M.nav_file(next_buf_line)
   end
-  M.nav_file(next_buf_line)
 end
 
 function M.nav_prev()
@@ -440,9 +443,12 @@ function M.nav_prev()
   end
   local prev_buf_line = current_buf_line - 1
   if prev_buf_line < 1 then
-    prev_buf_line = #marks
+    if config.loop_nav then
+        M.nav_file(#marks)
+    end
+  else
+    M.nav_file(prev_buf_line)
   end
-  M.nav_file(prev_buf_line)
 end
 
 function M.location_window(options)

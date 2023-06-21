@@ -49,6 +49,7 @@ function M.setup(config)
     focus_alternate_buffer = false,
     short_file_names = false,
     short_term_names = false,
+    loop_nav = true,
     highlight = "Normal",
     win_extra_options = {},
   }
