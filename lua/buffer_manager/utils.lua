@@ -18,9 +18,29 @@ function M.get_file_name(file)
   return file:match("[^/\\]*$")
 end
 
-function M.get_short_file_name(file)
+
+local function key_in_table(key, table)
+  for k, _ in pairs(table) do
+    if k == key then
+      return true
+    end
+  end
+  return false
+end
+
+
+function M.get_short_file_name(file, current_short_fns)
+  local short_name = nil
   -- Get normalized file path
   file = M.normalize_path(file)
+  -- Get all folders in the file path
+  local folders = {}
+  -- Convert file to string
+  local file_str = tostring(file)
+  for folder in string.gmatch(file_str, "([^/]+)") do
+    -- insert firts char only
+    table.insert(folders, folder)
+  end
   -- File to string
   file = tostring(file)
   -- Count the number of slashes in the relative file path
@@ -29,12 +49,26 @@ function M.get_short_file_name(file)
     slash_count = slash_count + 1
   end
   if slash_count == 0 then
-    return M.get_file_name(file)
+    short_name = M.get_file_name(file)
   else
     -- Return the file name preceded by the number of slashes
-    return slash_count .. "|" .. M.get_file_name(file)
+    short_name = slash_count .. "|" .. M.get_file_name(file)
   end
+  -- Check if the file name is already in the list of short file names
+  -- If so, return the short file name with one number in front of it
+  local i = 1
+  while key_in_table(short_name, current_short_fns) do
+    local folder = folders[i]
+    if folder == nil then
+      folder = i
+    end
+    short_name =  short_name.." ("..folder..")"
+    i = i + 1
+  end
+  return short_name
 end
+
+
 
 function M.get_short_term_name(term_name)
   return term_name:gsub("://.*//", ":")
