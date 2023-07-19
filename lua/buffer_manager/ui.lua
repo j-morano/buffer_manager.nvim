@@ -107,15 +107,19 @@ end
 
 local function get_mark_by_name(name, specific_marks)
   local ref_name = nil
+  local current_short_fns = {}
   for _, mark in pairs(specific_marks) do
     ref_name = mark.filename
-    if string_starts(mark.filename, "term:") then
+    if string_starts(mark.filename, "term://") then
       if config.short_term_names then
         ref_name = utils.get_short_term_name(mark.filename)
       end
     else
       if config.short_file_names then
-        ref_name = utils.get_short_file_name(mark.filename)
+        ref_name = utils.get_short_file_name(mark.filename, current_short_fns)
+        current_short_fns[ref_name] = true
+      else
+        ref_name = utils.normalize_path(mark.filename)
       end
     end
     if name == ref_name then
@@ -283,6 +287,7 @@ function M.toggle_quick_menu()
   local current_buf_line = 1
   local line = 1
   local modfied_lines = {}
+  local current_short_fns = {}
   for idx, mark in pairs(marks) do
     -- Add buffer only if it does not already exist
     if vim.fn.buflisted(mark.buf_id) ~= 1 then
@@ -302,7 +307,8 @@ function M.toggle_quick_menu()
       local display_filename = current_mark.filename
       if not string_starts(display_filename, "term://") then
         if config.short_file_names then
-          display_filename = utils.get_short_file_name(display_filename)
+          display_filename = utils.get_short_file_name(display_filename, current_short_fns)
+          current_short_fns[display_filename] = true
         else
           display_filename = utils.normalize_path(display_filename)
         end
