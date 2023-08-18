@@ -68,10 +68,10 @@ local function create_window()
   local Buffer_manager_win_id, win = popup.create(bufnr, win_config)
 
   if config.highlight ~= "" then
-    vim.api.nvim_win_set_option(
-      win.border.win_id,
-      "winhl",
-      config.highlight .. ":" .. config.highlight
+    vim.api.nvim_set_option_value(
+      "winhighlight",
+      config.highlight,
+      { win = win.border.win_id }
     )
   end
 
@@ -244,9 +244,9 @@ end
 
 
 local function set_win_buf_options(contents, current_buf_line)
-  vim.api.nvim_win_set_option(Buffer_manager_win_id, "number", true)
+  vim.api.nvim_set_option_value("number", true, { win = Buffer_manager_win_id })
   for key, value in pairs(config.win_extra_options) do
-    vim.api.nvim_win_set_option(Buffer_manager_win_id, key, value)
+    vim.api.nvim_set_option_value(key, value, { win = Buffer_manager_win_id })
   end
   vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
   vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)

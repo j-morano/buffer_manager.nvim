@@ -50,7 +50,7 @@ function M.setup(config)
     short_file_names = false,
     short_term_names = false,
     loop_nav = true,
-    highlight = "Normal",
+    highlight = "Normal:Normal",
     win_extra_options = {},
   }
 

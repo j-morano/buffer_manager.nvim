@@ -101,7 +101,7 @@ require("buffer_manager").setup({ })
 * `short_file_names`: Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
 * `short_term_names`: Shorten terminal buffer names.
 * `loop_nav`: Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
-* `highlight`: highlight for the window border.
+* `highlight`: highlight for the window.
 * `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`.
 
 #### Default configuration
@@ -119,7 +119,7 @@ require("buffer_manager").setup({ })
     short_file_names = false,
     short_term_names = false,
     loop_nav = true,
-    highlight = "Normal",
+    highlight = "Normal:Normal",
     win_extra_options = {},
   }
 ```
