@@ -51,7 +51,6 @@ local function create_window()
   end
 
   local borderchars = config.borderchars
-  or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
   local bufnr = vim.api.nvim_create_buf(false, false)
 
   local win_config = {
@@ -62,9 +61,6 @@ local function create_window()
     minheight = height,
     borderchars = borderchars,
   }
-  if config.highlight ~= "" then
-    win_config["highlight"] = config.highlight
-  end
   local Buffer_manager_win_id, win = popup.create(bufnr, win_config)
 
   if config.highlight ~= "" then
