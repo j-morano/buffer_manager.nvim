@@ -140,8 +140,8 @@ local function update_buffers()
   -- Check additions
   for idx, mark in pairs(marks) do
     local bufnr = vim.fn.bufnr(mark.filename)
-    -- Add buffer only if it does not already exist
-    if bufnr == -1 then
+    -- Add buffer only if it does not already exist or if it is not listed
+    if bufnr == -1 or vim.fn.buflisted(bufnr) ~= 1 then
       vim.cmd("badd " .. mark.filename)
       marks[idx].buf_id = vim.fn.bufnr(mark.filename)
     end
