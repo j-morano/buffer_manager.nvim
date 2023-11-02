@@ -105,6 +105,11 @@ require("buffer_manager").setup({ })
 * `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`.
 * `borderchars`: border characters for the menu window.
 
+In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
+```lua
+vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
+```
+
 #### Default configuration
 
 ```lua
