@@ -101,9 +101,10 @@ require("buffer_manager").setup({ })
 * `short_file_names`: Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
 * `short_term_names`: Shorten terminal buffer names.
 * `loop_nav`: Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
-* `highlight`: highlight for the window.
-* `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`.
+* `highlight`: highlight for the window. Format: `from1:to1,from2:to2`. E.g. `Normal:MyCustomNormal`. (See `:help winhighlight`.)
+* `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
 * `borderchars`: border characters for the menu window.
+
 
 In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
 ```lua
@@ -152,6 +153,10 @@ require("buffer_manager").setup({
   short_file_names = true,
   short_term_names = true,
   loop_nav = false,
+  highlight = 'Normal:BufferManagerBorder',
+  win_extra_options = {
+    winhighlight = 'Normal:BufferManagerNormal',
+  },
 })
 -- Navigate buffers bypassing the menu
 local bmui = require("buffer_manager.ui")
