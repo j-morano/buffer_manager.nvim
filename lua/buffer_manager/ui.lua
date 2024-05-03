@@ -114,6 +114,8 @@ local function get_mark_by_name(name, specific_marks)
       if config.short_file_names then
         ref_name = utils.get_short_file_name(mark.filename, current_short_fns)
         current_short_fns[ref_name] = true
+      elseif config.format_function then
+        ref_name = config.format_function(mark.filename)
       else
         ref_name = utils.normalize_path(mark.filename)
       end
@@ -305,6 +307,8 @@ function M.toggle_quick_menu()
         if config.short_file_names then
           display_filename = utils.get_short_file_name(display_filename, current_short_fns)
           current_short_fns[display_filename] = true
+        elseif config.format_function then
+          display_filename = config.format_function(display_filename)
         else
           display_filename = utils.normalize_path(display_filename)
         end

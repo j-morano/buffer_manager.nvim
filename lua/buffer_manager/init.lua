@@ -53,6 +53,7 @@ function M.setup(config)
     highlight = "",
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+    format_function = nil,
   }
 
   local complete_config = merge_tables(default_config, config)
