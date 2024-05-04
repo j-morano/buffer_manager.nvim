@@ -271,6 +271,8 @@ function M.toggle_quick_menu()
   else
     current_buf_id = vim.fn.bufnr()
   end
+  local real_alternate_buf = vim.fn.bufnr("#")
+  local real_current_buf = vim.fn.bufnr()
 
   local win_info = create_window()
   local contents = {}
@@ -284,7 +286,6 @@ function M.toggle_quick_menu()
   -- set initial_marks
   local current_buf_line = 1
   local line = 1
-  local modfied_lines = {}
   local current_short_fns = {}
   for idx, mark in pairs(marks) do
     -- Add buffer only if it does not already exist
@@ -296,9 +297,6 @@ function M.toggle_quick_menu()
         filename = current_mark.filename,
         buf_id = current_mark.buf_id,
       }
-      if vim.bo[current_mark.buf_id].modified then
-        table.insert(modfied_lines, line)
-      end
       if current_mark.buf_id == current_buf_id then
         current_buf_line = line
       end
@@ -324,18 +322,84 @@ function M.toggle_quick_menu()
 
   set_win_buf_options(contents, current_buf_line)
   set_menu_keybindings()
-  for _, modified_line in pairs(modfied_lines) do
-    vim.api.nvim_buf_add_highlight(
-      Buffer_manager_bufh,
-      -1,
-      "BufferManagerModified",
-      modified_line-1,
-      0,
-      -1
-    )
+
+  -- Indicators (chars in the same column are mutually exclusive):
+  -- u       an unlisted buffer (only displayed when [!] is used)
+  --        |unlisted-buffer|
+  --  %     the buffer in the current window
+  --  #     the alternate buffer for ":e #" and CTRL-^
+  --   a    an active buffer: it is loaded and visible
+  --   h    a hidden buffer: It is loaded, but currently not
+  --        displayed in a window |hidden-buffer|
+  --    -   a buffer with 'modifiable' off
+  --    =   a readonly buffer
+  --    R   a terminal buffer with a running job
+  --    F   a terminal buffer with a finished job
+  --    ?   a terminal buffer without a job: `:terminal NONE`
+  --     +  a modified buffer
+  --     x  a buffer with read errors
+  local bufs_list = vim.api.nvim_list_bufs()
+  local ns_id = vim.api.nvim_create_namespace("BufferManagerIndicator")
+  for idx, mark in pairs(marks) do
+    for _, ibuf in pairs(bufs_list) do
+      if mark.buf_id == ibuf then
+        local indicators = " "
+        if not vim.api.nvim_buf_get_option(ibuf, "buflisted") then
+          indicators = indicators .. "u"
+        end
+        if ibuf == real_current_buf then
+          indicators = indicators .. "%"
+        elseif ibuf == real_alternate_buf then
+          indicators = indicators .. "#"
+        end
+        if ibuf == real_current_buf then
+          indicators = indicators .. "a"
+        elseif vim.api.nvim_buf_is_loaded(ibuf) then
+          indicators = indicators .. "h"
+        end
+        if not vim.api.nvim_buf_get_option(ibuf, "modifiable") then
+          indicators = indicators .. "-"
+        elseif vim.api.nvim_buf_get_option(ibuf, "readonly") then
+          indicators = indicators .. "="
+        elseif vim.api.nvim_buf_get_option(ibuf, "buftype") == "terminal" then
+          if vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") then
+            indicators = indicators .. "R"
+          elseif vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") == 0 then
+            indicators = indicators .. "F"
+          else
+            indicators = indicators .. "?"
+          end
+        end
+        if vim.api.nvim_buf_get_option(ibuf, "modified") then
+          indicators = indicators .. "+"
+          vim.api.nvim_buf_add_highlight(
+            Buffer_manager_bufh,
+            -1,
+            "BufferManagerModified",
+            idx-1,
+            0,
+            -1
+          )
+        end
+        -- TODO: Add read errors indicator
+
+        if config.show_indicators then
+          vim.api.nvim_buf_set_extmark(
+            Buffer_manager_bufh,
+            ns_id,
+            idx - 1,
+            0,
+            {
+              virt_text = { { indicators, "Comment" } },
+              virt_text_pos = "eol",
+              hl_mode = "combine",
+            }
+          )
+        end
+      end
+    end
   end
 end
-
 
 
 function M.select_menu_item(command)
@@ -347,6 +411,7 @@ function M.select_menu_item(command)
   M.nav_file(idx, command)
   update_buffers()
 end
+
 
 local function get_menu_items()
   log.trace("_get_menu_items()")
@@ -361,6 +426,7 @@ local function get_menu_items()
 
   return indices
 end
+
 
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
@@ -386,10 +452,12 @@ local function set_mark_list(new_list)
   end
 end
 
+
 function M.on_menu_save()
   log.trace("on_menu_save()")
   set_mark_list(get_menu_items())
 end
+
 
 function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
@@ -423,6 +491,7 @@ local function get_current_buf_line()
   return -1
 end
 
+
 function M.nav_next()
   log.trace("nav_next()")
   update_marks()
@@ -440,6 +509,7 @@ function M.nav_next()
   end
 end
 
+
 function M.nav_prev()
   log.trace("nav_prev()")
   update_marks()
@@ -456,6 +526,7 @@ function M.nav_prev()
     M.nav_file(prev_buf_line)
   end
 end
+
 
 function M.location_window(options)
   local default_options = {
@@ -477,6 +548,7 @@ function M.location_window(options)
   }
 end
 
+
 function M.save_menu_to_file(filename)
   log.trace("save_menu_to_file()")
   if filename == nil or filename == "" then
@@ -495,6 +567,7 @@ function M.save_menu_to_file(filename)
   end
   file:close()
 end
+
 
 function M.load_menu_from_file(filename)
   log.trace("load_menu_from_file()")
