@@ -315,7 +315,11 @@ function M.toggle_quick_menu()
           display_filename = utils.get_short_term_name(display_filename)
         end
       end
-      contents[line] = string.format("%s", display_filename)
+      if config.show_indicators == 'before' then
+         contents[line] = string.format("      %s", display_filename)
+      else
+         contents[line] = string.format("%s", display_filename)
+      end
       line = line + 1
     end
   end
@@ -343,35 +347,35 @@ function M.toggle_quick_menu()
   for idx, mark in pairs(marks) do
     for _, ibuf in pairs(bufs_list) do
       if mark.buf_id == ibuf then
-        local indicators = " "
+        local indicators = "     "
         if not vim.api.nvim_buf_get_option(ibuf, "buflisted") then
-          indicators = indicators .. "u"
+          indicators = utils.replace_char(indicators, 1, "u")
         end
         if ibuf == real_current_buf then
-          indicators = indicators .. "%"
+          indicators = utils.replace_char(indicators, 2, "%")
         elseif ibuf == real_alternate_buf then
-          indicators = indicators .. "#"
+          indicators = utils.replace_char(indicators, 2, "#")
         end
         if ibuf == real_current_buf then
-          indicators = indicators .. "a"
+          indicators = utils.replace_char(indicators, 3, "a")
         elseif vim.api.nvim_buf_is_loaded(ibuf) then
-          indicators = indicators .. "h"
+          indicators = utils.replace_char(indicators, 3, "h")
         end
         if not vim.api.nvim_buf_get_option(ibuf, "modifiable") then
-          indicators = indicators .. "-"
+          indicators = utils.replace_char(indicators, 4, "-")
         elseif vim.api.nvim_buf_get_option(ibuf, "readonly") then
-          indicators = indicators .. "="
+          indicators = utils.replace_char(indicators, 4, "=")
         elseif vim.api.nvim_buf_get_option(ibuf, "buftype") == "terminal" then
           if vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") then
-            indicators = indicators .. "R"
+            indicators = utils.replace_char(indicators, 4, "R")
           elseif vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") == 0 then
-            indicators = indicators .. "F"
+            indicators = utils.replace_char(indicators, 4, "F")
           else
-            indicators = indicators .. "?"
+            indicators = utils.replace_char(indicators, 4, "?")
           end
         end
         if vim.api.nvim_buf_get_option(ibuf, "modified") then
-          indicators = indicators .. "+"
+          indicators = utils.replace_char(indicators, 5, "+")
           vim.api.nvim_buf_add_highlight(
             Buffer_manager_bufh,
             -1,
@@ -384,6 +388,10 @@ function M.toggle_quick_menu()
         -- TODO: Add read errors indicator
 
         if config.show_indicators then
+          local virt_text_pos = "eol"
+          if config.show_indicators == "before" then
+            virt_text_pos = "overlay"
+          end
           vim.api.nvim_buf_set_extmark(
             Buffer_manager_bufh,
             ns_id,
@@ -391,7 +399,8 @@ function M.toggle_quick_menu()
             0,
             {
               virt_text = { { indicators, "Comment" } },
-              virt_text_pos = "eol",
+              -- Position: beginning of line, with padding
+              virt_text_pos = virt_text_pos,
               hl_mode = "combine",
             }
           )
@@ -420,6 +429,8 @@ local function get_menu_items()
 
   for _, line in pairs(lines) do
     if not utils.is_white_space(line) then
+      -- Strip leading spaces from line
+      line = line:gsub("^%s+", "")
       table.insert(indices, line)
     end
   end
