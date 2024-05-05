@@ -105,6 +105,7 @@ require("buffer_manager").setup({ })
 * `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
 * `borderchars`: border characters for the menu window.
 * `format_function`: support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
+* `show_indicators`: show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
 
 
 In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
@@ -131,6 +132,7 @@ vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     format_function = nil,
+    show_indicators = nil,
   }
 ```
 
