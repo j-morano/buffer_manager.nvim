@@ -81,6 +81,10 @@ local function string_starts(string, start)
   return string.sub(string, 1, string.len(start)) == start
 end
 
+local function string_ends(string, ending)
+  return ending == "" or string.sub(string, -string.len(ending)) == ending
+end
+
 local function can_be_deleted(bufname, bufnr)
   return (
     vim.api.nvim_buf_is_valid(bufnr)
@@ -176,6 +180,26 @@ local function update_marks()
         filename = bufname,
         buf_id = buf,
       })
+    end
+  end
+  -- Order the buffers, if the option is set
+  if config.order_buffers then
+    if string_starts(config.order_buffers, 'filename') then
+      table.sort(marks, function(a, b)
+        return utils.get_file_name(a.filename) < utils.get_file_name(b.filename)
+      end)
+    elseif string_starts(config.order_buffers, 'buf_id') then
+      table.sort(marks, function(a, b)
+        return a.buf_id < b.buf_id
+      end)
+    end
+    if string_ends(config.order_buffers, 'reversed') then
+      -- Reverse the order of the marks
+      local reversed_marks = {}
+      for i = #marks, 1, -1 do
+        table.insert(reversed_marks, marks[i])
+      end
+      marks = reversed_marks
     end
   end
 end
