@@ -54,6 +54,7 @@ function M.setup(config)
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     format_function = nil,
+    order_buffers = nil,
     show_indicators = nil,
   }
 

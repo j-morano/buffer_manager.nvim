@@ -81,6 +81,10 @@ local function string_starts(string, start)
   return string.sub(string, 1, string.len(start)) == start
 end
 
+local function string_ends(string, ending)
+  return ending == "" or string.sub(string, -string.len(ending)) == ending
+end
+
 local function can_be_deleted(bufname, bufnr)
   return (
     vim.api.nvim_buf_is_valid(bufnr)
@@ -159,6 +163,40 @@ local function remove_mark(idx)
   end
 end
 
+
+local function order_buffers()
+  if string_starts(config.order_buffers, "filename") then
+    table.sort(marks, function(a, b)
+      local a_name = string.lower(utils.get_file_name(a.filename))
+      local b_name = string.lower(utils.get_file_name(b.filename))
+      return a_name < b_name
+    end)
+  elseif string_starts(config.order_buffers, "bufnr") then
+    table.sort(marks, function(a, b)
+      return a.buf_id < b.buf_id
+    end)
+  elseif string_starts(config.order_buffers, "lastused") then
+    table.sort(marks, function(a, b)
+      local a_lastused = vim.fn.getbufinfo(a.buf_id)[1].lastused
+      local b_lastused = vim.fn.getbufinfo(b.buf_id)[1].lastused
+      if a_lastused == b_lastused then
+        return a.buf_id < b.buf_id
+      else
+        return a_lastused > b_lastused
+      end
+    end)
+  end
+  if string_ends(config.order_buffers, "reverse") then
+    -- Reverse the order of the marks
+    local reversed_marks = {}
+    for i = #marks, 1, -1 do
+      table.insert(reversed_marks, marks[i])
+    end
+    marks = reversed_marks
+  end
+end
+
+
 local function update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
@@ -177,6 +215,10 @@ local function update_marks()
         buf_id = buf,
       })
     end
+  end
+  -- Order the buffers, if the option is set
+  if config.order_buffers then
+    order_buffers()
   end
 end
 
