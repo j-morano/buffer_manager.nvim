@@ -127,4 +127,9 @@ function M.deep_copy(obj, seen)
 end
 
 
+function M.replace_char(string, index, new_char)
+  return string:sub(1,index-1)..new_char..string:sub(index+1)
+end
+
+
 return M
