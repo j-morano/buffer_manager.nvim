@@ -299,6 +299,7 @@ end
 
 function M.toggle_quick_menu()
   log.trace("toggle_quick_menu()")
+  config = buffer_manager.get_config() -- update configuration
   if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
     if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
       M.on_menu_save()
