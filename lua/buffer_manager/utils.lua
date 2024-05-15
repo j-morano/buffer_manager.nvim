@@ -30,6 +30,10 @@ end
 
 
 function M.get_short_file_name(file, current_short_fns)
+  local has_win = vim.fn.has('win32') == 1
+  if has_win then
+  	file = file:gsub('\\','/')
+  end
   local short_name = nil
   -- Get normalized file path
   file = M.normalize_path(file)
