@@ -3,6 +3,17 @@ local Path = require("plenary.path")
 local M = {}
 
 
+
+local function separator()
+  if vim.fn.has('win32') == 1 then
+    return "\\"
+  else
+    return "/"
+  end
+end
+
+
+
 function M.project_key()
   return vim.loop.cwd()
 end
@@ -15,7 +26,8 @@ function M.normalize_path(item)
 end
 
 function M.get_file_name(file)
-  return file:match("[^/\\]*$")
+  -- return file:match("[^/\\]*$")
+  return file:match("[^" .. separator() .. "]*$")
 end
 
 
@@ -37,7 +49,8 @@ function M.get_short_file_name(file, current_short_fns)
   local folders = {}
   -- Convert file to string
   local file_str = tostring(file)
-  for folder in string.gmatch(file_str, "([^/]+)") do
+  -- for folder in string.gmatch(file_str, "([^/]+)") do
+  for folder in string.gmatch(file_str, "([^" .. separator() .. "]+)") do
     -- insert firts char only
     table.insert(folders, folder)
   end
@@ -45,7 +58,7 @@ function M.get_short_file_name(file, current_short_fns)
   file = tostring(file)
   -- Count the number of slashes in the relative file path
   local slash_count = 0
-  for _ in string.gmatch(file, "/") do
+  for _ in string.gmatch(file, separator()) do
     slash_count = slash_count + 1
   end
   if slash_count == 0 then
