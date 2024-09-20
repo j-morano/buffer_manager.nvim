@@ -63,9 +63,9 @@ function M.get_short_file_name(file, current_short_fns)
   -- Check if the file name is already in the list of short file names
   -- If so, return the short file name with one number in front of it
   local i = #folders-1
-  local filename = short_name
+  local filename = short_name:gsub('^%d+|', '')
   local dirname = ''
-  while key_in_table(short_name, current_short_fns) do
+  while key_in_table(short_name:gsub('^%d+|', ''), current_short_fns) do
     local folder = folders[i]
     if folder == nil then
       folder = i
