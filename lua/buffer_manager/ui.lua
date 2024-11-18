@@ -398,7 +398,7 @@ function M.toggle_quick_menu()
         elseif ibuf == real_alternate_buf then
           indicators = utils.replace_char(indicators, 2, "#")
         end
-        if ibuf == real_current_buf then
+        if vim.tbl_count(vim.fn.win_findbuf(ibuf)) ~= 0 then
           indicators = utils.replace_char(indicators, 3, "a")
         elseif vim.api.nvim_buf_is_loaded(ibuf) then
           indicators = utils.replace_char(indicators, 3, "h")
