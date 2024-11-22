@@ -117,7 +117,7 @@ local function get_mark_by_name(name, specific_marks)
     else
       if config.short_file_names then
         ref_name = utils.get_short_file_name(mark.filename, current_short_fns)
-        current_short_fns[ref_name] = true
+        current_short_fns[ref_name:gsub('^%d+|', '')] = true
       elseif config.format_function then
         ref_name = config.format_function(mark.filename)
       else
@@ -299,6 +299,7 @@ end
 
 function M.toggle_quick_menu()
   log.trace("toggle_quick_menu()")
+  config = buffer_manager.get_config() -- update configuration
   if Buffer_manager_win_id ~= nil and vim.api.nvim_win_is_valid(Buffer_manager_win_id) then
     if vim.api.nvim_buf_get_changedtick(vim.fn.bufnr()) > 0 then
       M.on_menu_save()
@@ -346,7 +347,7 @@ function M.toggle_quick_menu()
       if not string_starts(display_filename, "term://") then
         if config.short_file_names then
           display_filename = utils.get_short_file_name(display_filename, current_short_fns)
-          current_short_fns[display_filename] = true
+          current_short_fns[display_filename:gsub('^%d+|', '')] = true
         elseif config.format_function then
           display_filename = config.format_function(display_filename)
         else

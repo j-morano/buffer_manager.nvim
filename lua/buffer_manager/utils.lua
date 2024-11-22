@@ -30,6 +30,10 @@ end
 
 
 function M.get_short_file_name(file, current_short_fns)
+  local has_win = vim.fn.has('win32') == 1
+  if has_win then
+  	file = file:gsub('\\','/')
+  end
   local short_name = nil
   -- Get normalized file path
   file = M.normalize_path(file)
@@ -41,29 +45,34 @@ function M.get_short_file_name(file, current_short_fns)
     -- insert firts char only
     table.insert(folders, folder)
   end
+  -- folders : table which is constitute of file path every '/'
+  -- why does this function call files with multiple times?
   -- File to string
   file = tostring(file)
   -- Count the number of slashes in the relative file path
   local slash_count = 0
-  for _ in string.gmatch(file, "/") do
+  for _ in string.gmatch(file, "/") do -- he makes 'folders', but why do this?
     slash_count = slash_count + 1
   end
   if slash_count == 0 then
     short_name = M.get_file_name(file)
   else
     -- Return the file name preceded by the number of slashes
-    short_name = slash_count .. "|" .. M.get_file_name(file)
+    short_name = slash_count .. "|" .. M.get_file_name(file) -- get file name only regardless of path
   end
   -- Check if the file name is already in the list of short file names
   -- If so, return the short file name with one number in front of it
-  local i = 1
-  while key_in_table(short_name, current_short_fns) do
+  local i = #folders-1
+  local filename = short_name
+  local dirname = ''
+  while key_in_table(short_name:gsub('^%d+|', ''), current_short_fns) do
     local folder = folders[i]
     if folder == nil then
       folder = i
     end
-    short_name =  short_name.." ("..folder..")"
-    i = i + 1
+	dirname = folder .. '/' .. dirname
+	short_name = filename .. ' (' .. dirname .. ')'
+    i = i - 1
   end
   return short_name
 end
