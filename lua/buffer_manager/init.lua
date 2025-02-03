@@ -47,7 +47,10 @@ function M.setup(config)
       }
     },
     focus_alternate_buffer = false,
+    width = nil,
+    height = nil,
     short_file_names = false,
+    show_depth = true,
     short_term_names = false,
     loop_nav = true,
     highlight = "",

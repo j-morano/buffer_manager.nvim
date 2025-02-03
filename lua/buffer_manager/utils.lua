@@ -45,14 +45,18 @@ function M.get_short_file_name(file, current_short_fns)
   file = tostring(file)
   -- Count the number of slashes in the relative file path
   local slash_count = 0
-  for _ in string.gmatch(file, "/") do
-    slash_count = slash_count + 1
-  end
-  if slash_count == 0 then
-    short_name = M.get_file_name(file)
+  if require("buffer_manager").get_config().show_depth then
+    for _ in string.gmatch(file, "/") do
+      slash_count = slash_count + 1
+    end
+    if slash_count == 0 then
+      short_name = M.get_file_name(file)
+    else
+      -- Return the file name preceded by the number of slashes
+      short_name = slash_count .. "|" .. M.get_file_name(file)
+    end
   else
-    -- Return the file name preceded by the number of slashes
-    short_name = slash_count .. "|" .. M.get_file_name(file)
+    short_name = M.get_file_name(file)
   end
   -- Check if the file name is already in the list of short file names
   -- If so, return the short file name with one number in front of it

@@ -93,20 +93,21 @@ require("buffer_manager").setup({ })
 
 #### Available configuration options
 
-* `select_menu_item_commands`: Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
-* `line_keys`: keys bound to each line of the buffer menu, in order.
-* `focus_alternate_buffer`: place the cursor over the alternate buffer instead of the current buffer.
-* `width`: Width in columns (if > 1) or relative to window width (if <= 1).
-* `height`: Height in rows (if > 1) or relative to window height (if <= 1).
-* `short_file_names`: Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
-* `short_term_names`: Shorten terminal buffer names.
-* `loop_nav`: Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
-* `highlight`: highlight for the window. Format: `from1:to1,from2:to2`. E.g. `Normal:MyCustomNormal`. (See `:help winhighlight`.)
-* `win_extra_options`: extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
-* `borderchars`: border characters for the menu window.
-* `format_function`: support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
-* `order_buffers`: order the buffers in the menu. Options are `"filename"`, `"bufnr"` and `"lastused"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
-* `show_indicators`: show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
+* `select_menu_item_commands` (table): Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
+* `line_keys` (string): keys bound to each line of the buffer menu, in order.
+* `focus_alternate_buffer` (boolean): place the cursor over the alternate buffer instead of the current buffer.
+* `width` (number|nil): Width in columns (if > 1) or relative to window width (if <= 1).
+* `height` (number|nil): Height in rows (if > 1) or relative to window height (if <= 1).
+* `short_file_names` (boolean): Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
+* `show_depth` (boolean): Show the number of levels under the current dir before the filename (`n|filename`).
+* `short_term_names` (boolean): Shorten terminal buffer names.
+* `loop_nav` (boolean): Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
+* `highlight` (string): highlight for the window. Format: `from1:to1,from2:to2`. E.g. `Normal:MyCustomNormal`. (See `:help winhighlight`.)
+* `win_extra_options` (table): extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
+* `borderchars` (table): border characters for the menu window.
+* `format_function` (function|nil): support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
+* `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"` and `"lastused"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
+* `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
 
 
 In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
@@ -126,7 +127,10 @@ vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
       }
     },
     focus_alternate_buffer = false,
+    width = nil,
+    height = nil,
     short_file_names = false,
+    show_depth = true,
     short_term_names = false,
     loop_nav = true,
     highlight = "",
