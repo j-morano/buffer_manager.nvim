@@ -106,7 +106,7 @@ require("buffer_manager").setup({ })
 * `win_extra_options` (table): extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
 * `borderchars` (table): border characters for the menu window.
 * `format_function` (function|nil): support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
-* `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"` and `"lastused"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
+* `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"`, `"lastused"` and `"fullpath"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
 * `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
 
 

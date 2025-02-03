@@ -171,6 +171,12 @@ local function order_buffers()
       local b_name = string.lower(utils.get_file_name(b.filename))
       return a_name < b_name
     end)
+  elseif string_starts(config.order_buffers, "fullpath") then
+    table.sort(marks, function(a, b)
+      local a_name = string.lower(a.filename)
+      local b_name = string.lower(b.filename)
+      return a_name < b_name
+    end)
   elseif string_starts(config.order_buffers, "bufnr") then
     table.sort(marks, function(a, b)
       return a.buf_id < b.buf_id
