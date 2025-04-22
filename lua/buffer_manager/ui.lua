@@ -6,6 +6,10 @@ local log = require("buffer_manager.dev").log
 local marks = require("buffer_manager").marks
 
 
+local version_info = vim.inspect(vim.version())
+local version_minor = tonumber(version_info:match("minor = (%d+)"))
+
+
 local M = {}
 
 Buffer_manager_win_id = nil
@@ -296,9 +300,28 @@ local function set_win_buf_options(contents, current_buf_line)
   end
   vim.api.nvim_buf_set_name(Buffer_manager_bufh, "buffer_manager-menu")
   vim.api.nvim_buf_set_lines(Buffer_manager_bufh, 0, #contents, false, contents)
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
-  vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
+  -- Set functions depending on Neovim version
+  if version_minor > 9 then
+    vim.api.nvim_set_option_value(
+      "filetype",
+      "buffer_manager",
+      { buf = Buffer_manager_bufh }
+    )
+    vim.api.nvim_set_option_value(
+      "buftype",
+      "acwrite",
+      { buf = Buffer_manager_bufh }
+    )
+    vim.api.nvim_set_option_value(
+      "bufhidden",
+      "delete",
+      { buf = Buffer_manager_bufh }
+    )
+  else
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
+  end
   vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
 end
 
@@ -396,7 +419,26 @@ function M.toggle_quick_menu()
     for _, ibuf in pairs(bufs_list) do
       if mark.buf_id == ibuf then
         local indicators = "     "
-        if not vim.api.nvim_buf_get_option(ibuf, "buflisted") then
+        local buflisted
+        local modifiable
+        local modified
+        local readonly
+        local buftype
+        local terminal_job_id
+        if version_minor > 9 then
+          buflisted = vim.api.nvim_get_option_value("buflisted", { buf = ibuf })
+          modifiable = vim.api.nvim_get_option_value("modifiable", { buf = ibuf })
+          modified = vim.api.nvim_get_option_value("modified", { buf = ibuf })
+          readonly = vim.api.nvim_get_option_value("readonly", { buf = ibuf })
+          buftype = vim.api.nvim_get_option_value("buftype", { buf = ibuf })
+        else
+          buflisted = vim.api.nvim_buf_get_option(ibuf, "buflisted")
+          modifiable = vim.api.nvim_buf_get_option(ibuf, "modifiable")
+          modified = vim.api.nvim_buf_get_option(ibuf, "modified")
+          readonly = vim.api.nvim_buf_get_option(ibuf, "readonly")
+          buftype = vim.api.nvim_buf_get_option(ibuf, "buftype")
+        end
+        if not buflisted then
           indicators = utils.replace_char(indicators, 1, "u")
         end
         if ibuf == real_current_buf then
@@ -409,29 +451,46 @@ function M.toggle_quick_menu()
         elseif vim.api.nvim_buf_is_loaded(ibuf) then
           indicators = utils.replace_char(indicators, 3, "h")
         end
-        if not vim.api.nvim_buf_get_option(ibuf, "modifiable") then
+        if not modifiable then
           indicators = utils.replace_char(indicators, 4, "-")
-        elseif vim.api.nvim_buf_get_option(ibuf, "readonly") then
+        elseif readonly then
           indicators = utils.replace_char(indicators, 4, "=")
-        elseif vim.api.nvim_buf_get_option(ibuf, "buftype") == "terminal" then
-          if vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") then
+        elseif buftype == "terminal" then
+          if version_minor > 9 then
+            terminal_job_id = vim.api.nvim_get_option_value("terminal_job_id", { buf = ibuf })
+          else
+            terminal_job_id = vim.api.nvim_buf_get_option(ibuf, "terminal_job_id")
+          end
+          if terminal_job_id then
             indicators = utils.replace_char(indicators, 4, "R")
-          elseif vim.api.nvim_buf_get_option(ibuf, "terminal_job_id") == 0 then
+          elseif terminal_job_id == 0 then
             indicators = utils.replace_char(indicators, 4, "F")
           else
             indicators = utils.replace_char(indicators, 4, "?")
           end
         end
-        if vim.api.nvim_buf_get_option(ibuf, "modified") then
+        if modified then
           indicators = utils.replace_char(indicators, 5, "+")
-          vim.api.nvim_buf_add_highlight(
-            Buffer_manager_bufh,
-            -1,
-            "BufferManagerModified",
-            idx-1,
-            0,
-            -1
-          )
+          if version_minor > 9 then
+            vim.hl.range(
+              Buffer_manager_bufh,
+              -1,
+              "BufferManagerModified",
+              {idx-1, 0},
+              {idx-1, -1},
+              {}
+            )
+          else
+            -- function vim.api.nvim_buf_add_highlight(buffer: integer, ns_id: integer, hl_group: string, line: integer, col_start: integer, col_end: integer)
+            vim.api.nvim_buf_add_highlight(
+              Buffer_manager_bufh,
+              -1,
+              "BufferManagerModified",
+              idx-1,
+              0,
+              -1
+            )
+          end
         end
         -- TODO: Add read errors indicator
 
