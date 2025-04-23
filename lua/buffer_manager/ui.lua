@@ -9,6 +9,8 @@ local marks = require("buffer_manager").marks
 local version_info = vim.inspect(vim.version())
 local version_minor = tonumber(version_info:match("minor = (%d+)"))
 
+local ns_mod = vim.api.nvim_create_namespace("BufferManagerModified")
+local ns_ind = vim.api.nvim_create_namespace("BufferManagerIndicator")
 
 local M = {}
 
@@ -414,7 +416,6 @@ function M.toggle_quick_menu()
   --     +  a modified buffer
   --     x  a buffer with read errors
   local bufs_list = vim.api.nvim_list_bufs()
-  local ns_id = vim.api.nvim_create_namespace("BufferManagerIndicator")
   for idx, mark in pairs(marks) do
     for _, ibuf in pairs(bufs_list) do
       if mark.buf_id == ibuf then
@@ -474,7 +475,7 @@ function M.toggle_quick_menu()
           if version_minor > 9 then
             vim.hl.range(
               Buffer_manager_bufh,
-              -1,
+              ns_mod,
               "BufferManagerModified",
               {idx-1, 0},
               {idx-1, -1},
@@ -501,7 +502,7 @@ function M.toggle_quick_menu()
           end
           vim.api.nvim_buf_set_extmark(
             Buffer_manager_bufh,
-            ns_id,
+            ns_ind,
             idx - 1,
             0,
             {
