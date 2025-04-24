@@ -1,6 +1,6 @@
 <div align="center">
 
-![bm_logo](https://github.com/user-attachments/assets/9dfeeaa1-9c18-4acb-bc7f-8be19b8f6914)
+![bm_logo_simple](https://github.com/user-attachments/assets/5bb65a2a-358f-4c3f-a776-93df0242ccba)
 
 ### A simple plugin to easily manage Neovim buffers
 
