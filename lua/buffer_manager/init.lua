@@ -59,6 +59,7 @@ function M.setup(config)
     format_function = nil,
     order_buffers = nil,
     show_indicators = nil,
+    toggle_key_bindings = { "q", "<ESC>" },
   }
 
   local complete_config = merge_tables(default_config, config)

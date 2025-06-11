@@ -236,20 +236,15 @@ end
 
 
 local function set_menu_keybindings()
-  vim.api.nvim_buf_set_keymap(
-    Buffer_manager_bufh,
-    "n",
-    "q",
-    "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
-    { silent = true }
-  )
-  vim.api.nvim_buf_set_keymap(
-    Buffer_manager_bufh,
-    "n",
-    "<ESC>",
-    "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
-    { silent = true }
-  )
+  for _, key in pairs(config.toggle_key_bindings) do
+    vim.api.nvim_buf_set_keymap(
+      Buffer_manager_bufh,
+      "n",
+      key,
+      "<Cmd>lua require('buffer_manager.ui').toggle_quick_menu()<CR>",
+      { silent = true }
+    )
+  end
   for _, value in pairs(config.select_menu_item_commands) do
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,

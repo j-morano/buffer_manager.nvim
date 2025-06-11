@@ -109,6 +109,7 @@ require("buffer_manager").setup({ })
 * `format_function` (function|nil): support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
 * `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"`, `"lastused"` and `"fullpath"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
 * `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
+* `toggle_key_bindings` (table): table with the keys to toggle the menu. The default is `{ "q", "<ESC>" }`, which means that the menu can be closed with `q` or `<ESC>`.
 
 
 In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
@@ -140,6 +141,7 @@ vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
     format_function = nil,
     order_buffers = nil,
     show_indicators = nil,
+    toggle_key_bindings = { "q", "<ESC>" },
   }
 ```
 
