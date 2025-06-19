@@ -601,8 +601,11 @@ local function get_current_buf_line()
       return idx
     end
   end
-  log.error("get_current_buf_line(): Could not find current buffer in marks")
-  return -1
+  -- If the current buffer has `nobuflisted` set, it will not appear in the buffer list.
+  -- To get around this, we return 0 here to allow the `nav_next` and `nav_prev` functionality
+  -- to continue working as normal. This is especially needed for the vim intro screen and
+  -- for custom dashboards that are not included in the buffer list.
+  return 0
 end
 
 
@@ -610,9 +613,6 @@ function M.nav_next()
   log.trace("nav_next()")
   update_marks()
   local current_buf_line = get_current_buf_line()
-  if current_buf_line == -1 then
-    return
-  end
   local next_buf_line = current_buf_line + 1
   if next_buf_line > #marks then
     if config.loop_nav then
@@ -628,9 +628,6 @@ function M.nav_prev()
   log.trace("nav_prev()")
   update_marks()
   local current_buf_line = get_current_buf_line()
-  if current_buf_line == -1 then
-    return
-  end
   local prev_buf_line = current_buf_line - 1
   if prev_buf_line < 1 then
     if config.loop_nav then
