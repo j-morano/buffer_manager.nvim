@@ -97,8 +97,8 @@ require("buffer_manager").setup({ })
 * `select_menu_item_commands` (table): Lua table containing the keys and the corresponding `command` to run for the buffer under the cursor.
 * `line_keys` (string): keys bound to each line of the buffer menu, in order.
 * `focus_alternate_buffer` (boolean): place the cursor over the alternate buffer instead of the current buffer.
-* `width` (number|nil): Width in columns (if > 1) or relative to window width (if <= 1).
-* `height` (number|nil): Height in rows (if > 1) or relative to window height (if <= 1).
+* `width` (number|nil): Width in columns (if > 1) or relative to window width (if <= 1). When relative, the value is treated as a percentage of the window width. For example, `0.5` means 50% of the window width.
+* `height` (number|nil): Height in rows (if > 1) or relative to window height (if <= 1). When relative, the value is treated as a percentage of the window height. For example, `0.5` means 50% of the window height.
 * `short_file_names` (boolean): Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
 * `show_depth` (boolean): Show the number of levels under the current dir before the filename (`n|filename`).
 * `short_term_names` (boolean): Shorten terminal buffer names.
