@@ -209,7 +209,7 @@ local function order_buffers()
 end
 
 
-local function update_marks()
+function M.update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
   for idx, mark in pairs(marks) do
@@ -349,7 +349,7 @@ function M.toggle_quick_menu()
   Buffer_manager_win_id = win_info.win_id
   Buffer_manager_bufh = win_info.bufnr
 
-  update_marks()
+  M.update_marks()
 
   -- set initial_marks
   local current_buf_line = 1
@@ -575,7 +575,7 @@ end
 
 function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
-  update_marks()
+  M.update_marks()
 
   local mark = marks[id]
   if not mark then
@@ -611,7 +611,7 @@ end
 
 function M.nav_next()
   log.trace("nav_next()")
-  update_marks()
+  M.update_marks()
   local current_buf_line = get_current_buf_line()
   local next_buf_line = current_buf_line + 1
   if next_buf_line > #marks then
@@ -626,7 +626,7 @@ end
 
 function M.nav_prev()
   log.trace("nav_prev()")
-  update_marks()
+  M.update_marks()
   local current_buf_line = get_current_buf_line()
   local prev_buf_line = current_buf_line - 1
   if prev_buf_line < 1 then
