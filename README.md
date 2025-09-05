@@ -110,17 +110,21 @@ require("buffer_manager").setup({ })
 * `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"`, `"lastused"` and `"fullpath"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
 * `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
 * `toggle_key_bindings` (table): table with the keys to toggle the menu. The default is `{ "q", "<ESC>" }`, which means that the menu can be closed with `q` or `<ESC>`.
+* `use_shortcuts` (boolean): whether to use characters from filenames to navigate to them. If `true`, the first character of the filename is used as a shortcut. If the character is already used by another filename, the next character is used, and so on. If `false`, shortcuts are not used. Default is `false`.
 
 
-In addition, you can specify a custom color for the modified buffers, by setting the highlight group `BufferManagerModified` to the desired color. For example:
+In addition, you can specify a custom color for the modified buffers, the indicators, and the shortcut characters, by setting the corresponding highlight groups to the desired color. For example:
+
 ```lua
 vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
+vim.api.nvim_set_hl(0, "BufferManagerShortcut", { fg = "#cc0000", bold = true })
+vim.api.nvim_set_hl(0, "BufferManagerIndicator", { fg = "#999999", italic = true })
 ```
 
 #### Default configuration
 
 ```lua
-  {
+  local default_config = {
     line_keys = "1234567890",
     select_menu_item_commands = {
       edit = {
@@ -142,6 +146,7 @@ vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
     order_buffers = nil,
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
+    use_shortcuts = false,
   }
 ```
 
@@ -150,7 +155,8 @@ vim.api.nvim_set_hl(0, "BufferManagerModified", { fg = "#0000af" })
 ```lua
 local opts = {noremap = true}
 local map = vim.keymap.set
--- Setup
+
+---- Setup
 require("buffer_manager").setup({
   select_menu_item_commands = {
     v = {
@@ -170,8 +176,10 @@ require("buffer_manager").setup({
   win_extra_options = {
     winhighlight = 'Normal:BufferManagerNormal',
   },
+  use_shortcuts = true,
 })
--- Navigate buffers bypassing the menu
+
+---- Navigate buffers bypassing the menu
 local bmui = require("buffer_manager.ui")
 local keys = '1234567890'
 for i = 1, #keys do
@@ -183,9 +191,11 @@ for i = 1, #keys do
     opts
   )
 end
--- Just the menu
+
+---- Just the menu
 map({ 't', 'n' }, '<M-Space>', bmui.toggle_quick_menu, opts)
--- Open menu and search
+
+---- Open menu and search
 map({ 't', 'n' }, '<M-m>', function ()
   bmui.toggle_quick_menu()
   -- wait for the menu to open
@@ -193,9 +203,30 @@ map({ 't', 'n' }, '<M-m>', function ()
     vim.fn.feedkeys('/')
   end, 50)
 end, opts)
--- Next/Prev
+
+---- Next/Prev
 map('n', '<M-j>', bmui.nav_next, opts)
 map('n', '<M-k>', bmui.nav_prev, opts)
+
+---- Navigate to the first terminal buffer
+local function string_starts(string, start)
+  return string.sub(string, 1, string.len(start)) == start
+end
+
+local function nav_term()
+  -- Go to the first terminal buffer
+  bmui.update_marks()
+  for idx, mark in pairs(bm.marks) do
+    if string_starts(mark.filename, "term://") then
+      bmui.nav_file(idx)
+      return
+    end
+  end
+  -- If no terminal buffer is found, create a new one
+  vim.cmd('terminal')
+end
+
+map('n', '<leader>t', nav_term, opts)
 ```
 
 
