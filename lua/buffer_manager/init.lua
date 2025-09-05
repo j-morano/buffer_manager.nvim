@@ -1,7 +1,6 @@
 local Dev = require("buffer_manager.dev")
 local log = Dev.log
-local buffer_is_valid = require("buffer_manager.utils").buffer_is_valid
-local merge_tables = require("buffer_manager.utils").merge_tables
+local utils = require("buffer_manager.utils")
 
 
 local M = {}
@@ -16,14 +15,14 @@ function M.initialize_marks()
   for idx = 1, #buffers do
     local buf_id = buffers[idx]
     local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    local filename = buf_name
     -- if buffer is listed, then add to contents and marks
-    if buffer_is_valid(buf_id, buf_name) then
+    if utils.buffer_is_valid(buf_id, buf_name) then
       table.insert(
         M.marks,
         {
-          filename = filename,
+          buf_name = buf_name,
           buf_id = buf_id,
+          shortcut = utils.assign_shortcut(M.marks, buf_name),
         }
       )
     end
@@ -60,9 +59,10 @@ function M.setup(config)
     order_buffers = nil,
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
+    use_shortcuts = false,
   }
 
-  local complete_config = merge_tables(default_config, config)
+  local complete_config = utils.merge_tables(default_config, config)
 
   BufferManagerConfig = complete_config
   log.debug("setup(): Config", BufferManagerConfig)

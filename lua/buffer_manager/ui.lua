@@ -11,6 +11,39 @@ local version_minor = tonumber(version_info:match("minor = (%d+)"))
 
 local ns_mod = vim.api.nvim_create_namespace("BufferManagerModified")
 local ns_ind = vim.api.nvim_create_namespace("BufferManagerIndicator")
+local ns_short = vim.api.nvim_create_namespace("BufferManagerShortcut")
+
+
+local function copy_hl(hl)
+  return {
+    fg = hl.fg,
+    bg = hl.bg,
+    sp = hl.sp,
+    bold = hl.bold,
+    italic = hl.italic,
+    underline = hl.underline,
+    undercurl = hl.undercurl,
+    reverse = hl.reverse,
+    standout = hl.standout,
+    strikethrough = hl.strikethrough,
+    nocombine = hl.nocombine,
+  }
+end
+
+-- Check if highlight groups exist, if not, create them
+if vim.fn.hlexists("BufferManagerModified") == 0 then
+  -- If the hl group does not exist, just set it to bold
+  vim.api.nvim_set_hl(0, 'BufferManagerModified', { bold = true })
+end
+if vim.fn.hlexists("BufferManagerIndicator") == 0 then
+  -- If the hl group does not exist, copy the Comment hl group
+  local hl = vim.api.nvim_get_hl(0, { name = "Comment" })
+  vim.api.nvim_set_hl(0, 'BufferManagerIndicator', copy_hl(hl))
+end
+if vim.fn.hlexists("BufferManagerShortcut") == 0 then
+  -- If the hl group does not exist, just set it to bold and underline
+  vim.api.nvim_set_hl(0, 'BufferManagerShortcut', { bold = true, underline = true })
+end
 
 local M = {}
 
@@ -83,18 +116,11 @@ local function create_window()
   }
 end
 
-local function string_starts(string, start)
-  return string.sub(string, 1, string.len(start)) == start
-end
-
-local function string_ends(string, ending)
-  return ending == "" or string.sub(string, -string.len(ending)) == ending
-end
 
 local function can_be_deleted(bufname, bufnr)
   return (
     vim.api.nvim_buf_is_valid(bufnr)
-    and (not string_starts(bufname, "term://"))
+    and (not utils.string_starts(bufname, "term://"))
     and (not vim.bo[bufnr].modified)
     and bufnr ~= -1
   )
@@ -115,19 +141,19 @@ local function get_mark_by_name(name, specific_marks)
   local ref_name = nil
   local current_short_fns = {}
   for _, mark in pairs(specific_marks) do
-    ref_name = mark.filename
-    if string_starts(mark.filename, "term://") then
+    ref_name = mark.buf_name
+    if utils.string_starts(mark.buf_name, "term://") then
       if config.short_term_names then
-        ref_name = utils.get_short_term_name(mark.filename)
+        ref_name = utils.get_short_term_name(mark.buf_name)
       end
     else
       if config.short_file_names then
-        ref_name = utils.get_short_file_name(mark.filename, current_short_fns)
+        ref_name = utils.get_short_file_name(mark.buf_name, current_short_fns)
         current_short_fns[ref_name] = true
       elseif config.format_function then
-        ref_name = config.format_function(mark.filename)
+        ref_name = config.format_function(mark.buf_name)
       else
-        ref_name = utils.normalize_path(mark.filename)
+        ref_name = utils.normalize_path(mark.buf_name)
       end
     end
     if name == ref_name then
@@ -142,7 +168,7 @@ local function update_buffers()
   -- Check deletions
   for _, mark in pairs(initial_marks) do
     if not is_buffer_in_marks(mark.buf_id) then
-      if can_be_deleted(mark.filename, mark.buf_id) then
+      if can_be_deleted(mark.buf_name, mark.buf_id) then
         vim.api.nvim_buf_clear_namespace(mark.buf_id, -1, 1, -1)
         vim.api.nvim_buf_delete(mark.buf_id, {})
       end
@@ -151,11 +177,12 @@ local function update_buffers()
 
   -- Check additions
   for idx, mark in pairs(marks) do
-    local bufnr = vim.fn.bufnr(mark.filename)
+    local bufnr = vim.fn.bufnr(mark.buf_name)
     -- Add buffer only if it does not already exist or if it is not listed
     if bufnr == -1 or vim.fn.buflisted(bufnr) ~= 1 then
-      vim.cmd("badd " .. mark.filename)
-      marks[idx].buf_id = vim.fn.bufnr(mark.filename)
+      vim.cmd("badd " .. mark.buf_name)
+      marks[idx].buf_id = vim.fn.bufnr(mark.buf_name)
+      marks[idx].shortcut = utils.assign_shortcut(marks, mark.buf_name)
     end
   end
 end
@@ -171,23 +198,23 @@ end
 
 
 local function order_buffers()
-  if string_starts(config.order_buffers, "filename") then
+  if utils.string_starts(config.order_buffers, "filename") then
     table.sort(marks, function(a, b)
-      local a_name = string.lower(utils.get_file_name(a.filename))
-      local b_name = string.lower(utils.get_file_name(b.filename))
+      local a_name = string.lower(utils.get_file_name(a.buf_name))
+      local b_name = string.lower(utils.get_file_name(b.buf_name))
       return a_name < b_name
     end)
-  elseif string_starts(config.order_buffers, "fullpath") then
+  elseif utils.string_starts(config.order_buffers, "fullpath") then
     table.sort(marks, function(a, b)
-      local a_name = string.lower(a.filename)
-      local b_name = string.lower(b.filename)
+      local a_name = string.lower(a.buf_name)
+      local b_name = string.lower(b.buf_name)
       return a_name < b_name
     end)
-  elseif string_starts(config.order_buffers, "bufnr") then
+  elseif utils.string_starts(config.order_buffers, "bufnr") then
     table.sort(marks, function(a, b)
       return a.buf_id < b.buf_id
     end)
-  elseif string_starts(config.order_buffers, "lastused") then
+  elseif utils.string_starts(config.order_buffers, "lastused") then
     table.sort(marks, function(a, b)
       local a_lastused = vim.fn.getbufinfo(a.buf_id)[1].lastused
       local b_lastused = vim.fn.getbufinfo(b.buf_id)[1].lastused
@@ -198,7 +225,7 @@ local function order_buffers()
       end
     end)
   end
-  if string_ends(config.order_buffers, "reverse") then
+  if utils.string_ends(config.order_buffers, "reverse") then
     -- Reverse the order of the marks
     local reversed_marks = {}
     for i = #marks, 1, -1 do
@@ -213,7 +240,7 @@ function M.update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
   for idx, mark in pairs(marks) do
-    if not utils.buffer_is_valid(mark.buf_id, mark.filename) then
+    if not utils.buffer_is_valid(mark.buf_id, mark.buf_name) then
       remove_mark(idx)
     end
   end
@@ -223,8 +250,9 @@ function M.update_marks()
     local bufname = vim.api.nvim_buf_get_name(buf)
     if utils.buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
       table.insert(marks, {
-        filename = bufname,
+        buf_name = bufname,
         buf_id = buf,
+        shortcut = utils.assign_shortcut(marks, bufname),
       })
     end
   end
@@ -271,7 +299,7 @@ local function set_menu_keybindings()
       Buffer_manager_bufh
     )
   )
-  -- Go to file hitting its line number
+  -- Go to file hitting its line key
   local str = config.line_keys
   for i = 1, #str do
     local c = str:sub(i,i)
@@ -287,6 +315,42 @@ local function set_menu_keybindings()
       {}
     )
   end
+  -- Go to file hitting its shortcut key
+  if config.use_shortcuts then
+    for idx, mark in pairs(marks) do
+      if mark.shortcut then
+        vim.api.nvim_buf_set_keymap(
+          Buffer_manager_bufh,
+          "n",
+          mark.shortcut,
+          string.format(
+            "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
+            ".select_menu_item()<CR>",
+            idx
+          ),
+          {noremap = true, silent = true, nowait = true}
+        )
+      end
+    end
+    -- Add keybinding "e" to start editing mode and unmap the previous keybindings
+    vim.api.nvim_buf_set_keymap(
+      Buffer_manager_bufh,
+      "n",
+      "e",
+      "<Cmd>lua require('buffer_manager.ui').unmap_shortcuts()<CR>",
+      { noremap = true, silent = true }
+    )
+  end
+end
+
+
+function M.unmap_shortcuts()
+  for _, mark in pairs(marks) do
+    if mark.shortcut then
+      vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", mark.shortcut)
+    end
+  end
+  vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", "e")
 end
 
 
@@ -361,32 +425,34 @@ function M.toggle_quick_menu()
       marks[idx] = nil
     else
       local current_mark = marks[idx]
+      -- Marks contain the absolute path, the buffer id and the shortcut char
       initial_marks[idx] = {
-        filename = current_mark.filename,
+        buf_name = current_mark.buf_name,
         buf_id = current_mark.buf_id,
+        shortcut = current_mark.shortcut,
       }
       if current_mark.buf_id == current_buf_id then
         current_buf_line = line
       end
-      local display_filename = current_mark.filename
-      if not string_starts(display_filename, "term://") then
+      local display_name = current_mark.buf_name
+      if not utils.string_starts(display_name, "term://") then
         if config.short_file_names then
-          display_filename = utils.get_short_file_name(display_filename, current_short_fns)
-          current_short_fns[display_filename] = true
+          display_name = utils.get_short_file_name(display_name, current_short_fns)
+          current_short_fns[display_name] = true
         elseif config.format_function then
-          display_filename = config.format_function(display_filename)
+          display_name = config.format_function(display_name)
         else
-          display_filename = utils.normalize_path(display_filename)
+          display_name = utils.normalize_path(display_name)
         end
       else
         if config.short_term_names then
-          display_filename = utils.get_short_term_name(display_filename)
+          display_name = utils.get_short_term_name(display_name)
         end
       end
       if config.show_indicators == 'before' then
-         contents[line] = string.format("      %s", display_filename)
+         contents[line] = string.format("      %s", display_name)
       else
-         contents[line] = string.format("%s", display_filename)
+         contents[line] = string.format("%s", display_name)
       end
       line = line + 1
     end
@@ -410,8 +476,41 @@ function M.toggle_quick_menu()
   --    ?   a terminal buffer without a job: `:terminal NONE`
   --     +  a modified buffer
   --     x  a buffer with read errors
+  -- Also highlight shortcut chars and modified buffers
   local bufs_list = vim.api.nvim_list_bufs()
   for idx, mark in pairs(marks) do
+    if mark.shortcut and config.use_shortcuts then
+      local file_name = utils.get_file_name(contents[idx])
+      local dir_name = utils.get_dir_name(contents[idx])
+      -- Char pos is dir_name + 1 (for the /) + position of the shortcut in the
+      -- line.
+      -- Check if dir_name is nil
+      if dir_name == nil then
+        dir_name = ""
+      end
+      local char_pos = #dir_name + string.lower(file_name):find(mark.shortcut, 1, true)
+      if char_pos then
+        if version_minor > 9 then
+          vim.hl.range(
+            Buffer_manager_bufh,
+            ns_short,
+            "BufferManagerShortcut",
+            {idx-1, char_pos - 1},
+            {idx-1, char_pos},
+            {}
+          )
+        else
+          vim.api.nvim_buf_add_highlight(
+            Buffer_manager_bufh,
+            -1,
+            "BufferManagerShortcut",
+            idx-1,
+            char_pos - 1,
+            char_pos
+          )
+        end
+      end
+    end
     for _, ibuf in pairs(bufs_list) do
       if mark.buf_id == ibuf then
         local indicators = "     "
@@ -477,14 +576,13 @@ function M.toggle_quick_menu()
               {}
             )
           else
-            -- function vim.api.nvim_buf_add_highlight(buffer: integer, ns_id: integer, hl_group: string, line: integer, col_start: integer, col_end: integer)
             vim.api.nvim_buf_add_highlight(
-              Buffer_manager_bufh,
-              -1,
-              "BufferManagerModified",
-              idx-1,
-              0,
-              -1
+              Buffer_manager_bufh,      -- buffer: integer,
+              -1,                       -- ns_id: integer,
+              "BufferManagerModified",  -- hl_group: string,
+              idx-1,                    -- line: integer,
+              0,                        -- col_start: integer,
+              -1                        -- col_end: integer
             )
           end
         end
@@ -501,7 +599,7 @@ function M.toggle_quick_menu()
             idx - 1,
             0,
             {
-              virt_text = { { indicators, "Comment" } },
+              virt_text = { { indicators, "BufferManagerIndicator" } },
               -- Position: beginning of line, with padding
               virt_text_pos = virt_text_pos,
               hl_mode = "combine",
@@ -549,18 +647,22 @@ local function set_mark_list(new_list)
   marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
-      local filename = v
+      local buf_name = v
       local buf_id = nil
-      local current_mark = get_mark_by_name(filename, original_marks)
+      local shortcut = nil
+      local current_mark = get_mark_by_name(buf_name, original_marks)
       if current_mark then
-        filename = current_mark.filename
+        buf_name = current_mark.buf_name
         buf_id = current_mark.buf_id
+        shortcut = current_mark.shortcut
       else
         buf_id = vim.fn.bufnr(v)
+        shortcut = utils.assign_shortcut(marks, buf_name)
       end
       table.insert(marks, {
-        filename = filename,
+        buf_name = buf_name,
         buf_id = buf_id,
+        shortcut = shortcut,
       })
     end
   end
@@ -582,15 +684,15 @@ function M.nav_file(id, command)
     return
   end
   if command == nil or command == "edit" then
-    local bufnr = vim.fn.bufnr(mark.filename)
-    -- Check if buffer exists by filename
+    local bufnr = vim.fn.bufnr(mark.buf_name)
+    -- Check if buffer exists by buffer name
     if bufnr ~= -1 then
       vim.cmd("buffer " .. bufnr)
     else
-      vim.cmd("edit " .. mark.filename)
+      vim.cmd("edit " .. mark.buf_name)
     end
   else
-    vim.cmd(command .. " " .. mark.filename)
+    vim.cmd(command .. " " .. mark.buf_name)
   end
 end
 
@@ -660,35 +762,35 @@ function M.location_window(options)
 end
 
 
-function M.save_menu_to_file(filename)
+function M.save_menu_to_file(path)
   log.trace("save_menu_to_file()")
-  if filename == nil or filename == "" then
-    filename = vim.fn.input("Enter filename: ")
-    if filename == "" then
+  if path == nil or path == "" then
+    path = vim.fn.input("Enter file path: ")
+    if path == "" then
       return
     end
   end
-  local file = io.open(filename, "w")
+  local file = io.open(path, "w")
   if file == nil then
     log.error("save_menu_to_file(): Could not open file for writing")
     return
   end
   for _, mark in pairs(marks) do
-    file:write(Path:new(mark.filename):absolute() .. "\n")
+    file:write(Path:new(mark.buf_name):absolute() .. "\n")
   end
   file:close()
 end
 
 
-function M.load_menu_from_file(filename)
+function M.load_menu_from_file(path)
   log.trace("load_menu_from_file()")
-  if filename == nil or filename == "" then
-    filename = vim.fn.input("Enter filename: ")
-    if filename == "" then
+  if path == nil or path == "" then
+    path = vim.fn.input("Enter file path: ")
+    if path == "" then
       return
     end
   end
-  local file = io.open(filename, "r")
+  local file = io.open(path, "r")
   if file == nil then
     log.error("load_menu_from_file(): Could not open file for reading")
     return

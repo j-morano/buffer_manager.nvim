@@ -7,15 +7,32 @@ function M.project_key()
   return vim.loop.cwd()
 end
 
-function M.normalize_path(item)
-  if string.find(item, ".*:///.*") ~= nil then
-      return Path:new(item)
-  end
-  return Path:new(Path:new(item):absolute()):make_relative(M.project_key())
+
+function M.string_starts(string, start)
+  return string.sub(string, 1, string.len(start)) == start
 end
 
-function M.get_file_name(file)
-  return file:match("[^/\\]*$")
+
+function M.string_ends(string, ending)
+  return ending == "" or string.sub(string, -string.len(ending)) == ending
+end
+
+
+function M.normalize_path(path)
+  if string.find(path, ".*:///.*") ~= nil then
+      return Path:new(path)
+  end
+  return Path:new(Path:new(path):absolute()):make_relative(M.project_key())
+end
+
+
+function M.get_file_name(path)
+  return path:match("[^/\\]*$")
+end
+
+
+function M.get_dir_name(path)
+  return path:match("(.*/)")
 end
 
 
@@ -29,34 +46,34 @@ local function key_in_table(key, table)
 end
 
 
-function M.get_short_file_name(file, current_short_fns)
+function M.get_short_file_name(path, current_short_fns)
   local short_name = nil
   -- Get normalized file path
-  file = M.normalize_path(file)
+  path = M.normalize_path(path)
   -- Get all folders in the file path
   local folders = {}
-  -- Convert file to string
-  local file_str = tostring(file)
-  for folder in string.gmatch(file_str, "([^/]+)") do
+  -- Convert path to string
+  local path_str = tostring(path)
+  for folder in string.gmatch(path_str, "([^/]+)") do
     -- insert firts char only
     table.insert(folders, folder)
   end
-  -- File to string
-  file = tostring(file)
+  -- Path to string
+  path = tostring(path)
   -- Count the number of slashes in the relative file path
   local slash_count = 0
   if require("buffer_manager").get_config().show_depth then
-    for _ in string.gmatch(file, "/") do
+    for _ in string.gmatch(path, "/") do
       slash_count = slash_count + 1
     end
     if slash_count == 0 then
-      short_name = M.get_file_name(file)
+      short_name = M.get_file_name(path)
     else
       -- Return the file name preceded by the number of slashes
-      short_name = slash_count .. "|" .. M.get_file_name(file)
+      short_name = slash_count .. "|" .. M.get_file_name(path)
     end
   else
-    short_name = M.get_file_name(file)
+    short_name = M.get_file_name(path)
   end
   -- Check if the file name is already in the list of short file names
   -- If so, return the short file name with one number in front of it
@@ -73,13 +90,12 @@ function M.get_short_file_name(file, current_short_fns)
 end
 
 
-
 function M.get_short_term_name(term_name)
   return term_name:gsub("://.*//", ":")
 end
 
-function M.absolute_path(item)
-  return Path:new(item):absolute()
+function M.absolute_path(path)
+  return Path:new(path):absolute()
 end
 
 function M.is_white_space(str)
@@ -133,6 +149,27 @@ end
 
 function M.replace_char(string, index, new_char)
   return string:sub(1,index-1)..new_char..string:sub(index+1)
+end
+
+
+function M.assign_shortcut(cmarks, buf_name)
+  -- Iterate over the filename, and assing the first char that is not already
+  --  assigned in marks.
+  local assigned_chars = {}
+  for _, mark in pairs(cmarks) do
+    if mark.shortcut then
+      assigned_chars[mark.shortcut] = true
+    end
+  end
+  local filename = M.get_file_name(buf_name)
+  for i = 1, #filename do
+    local c = string.lower(filename:sub(i,i))
+    if c:match("%w") and not assigned_chars[c] then
+      assigned_chars[c] = true
+      return c
+    end
+  end
+  return nil
 end
 
 
