@@ -3,7 +3,6 @@ local buffer_manager = require("buffer_manager")
 local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
-local marks = require("buffer_manager").marks
 
 
 local version_info = vim.inspect(vim.version())
@@ -102,7 +101,7 @@ end
 
 
 local function is_buffer_in_marks(bufnr)
-  for _, mark in pairs(marks) do
+  for _, mark in pairs(buffer_manager.marks) do
     if mark.buf_id == bufnr then
       return true
     end
@@ -150,21 +149,21 @@ local function update_buffers()
   end
 
   -- Check additions
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(buffer_manager.marks) do
     local bufnr = vim.fn.bufnr(mark.filename)
     -- Add buffer only if it does not already exist or if it is not listed
     if bufnr == -1 or vim.fn.buflisted(bufnr) ~= 1 then
       vim.cmd("badd " .. mark.filename)
-      marks[idx].buf_id = vim.fn.bufnr(mark.filename)
+      buffer_manager.marks[idx].buf_id = vim.fn.bufnr(mark.filename)
     end
   end
 end
 
 local function remove_mark(idx)
-  marks[idx] = nil
-  if idx < #marks then
-    for i = idx, #marks do
-      marks[i] = marks[i + 1]
+  buffer_manager.marks[idx] = nil
+  if idx < #buffer_manager.marks then
+    for i = idx, #buffer_manager.marks do
+      buffer_manager.marks[i] = buffer_manager.marks[i + 1]
     end
   end
 end
@@ -172,23 +171,23 @@ end
 
 local function order_buffers()
   if string_starts(config.order_buffers, "filename") then
-    table.sort(marks, function(a, b)
+    table.sort(buffer_manager.marks, function(a, b)
       local a_name = string.lower(utils.get_file_name(a.filename))
       local b_name = string.lower(utils.get_file_name(b.filename))
       return a_name < b_name
     end)
   elseif string_starts(config.order_buffers, "fullpath") then
-    table.sort(marks, function(a, b)
+    table.sort(buffer_manager.marks, function(a, b)
       local a_name = string.lower(a.filename)
       local b_name = string.lower(b.filename)
       return a_name < b_name
     end)
   elseif string_starts(config.order_buffers, "bufnr") then
-    table.sort(marks, function(a, b)
+    table.sort(buffer_manager.marks, function(a, b)
       return a.buf_id < b.buf_id
     end)
   elseif string_starts(config.order_buffers, "lastused") then
-    table.sort(marks, function(a, b)
+    table.sort(buffer_manager.marks, function(a, b)
       local a_lastused = vim.fn.getbufinfo(a.buf_id)[1].lastused
       local b_lastused = vim.fn.getbufinfo(b.buf_id)[1].lastused
       if a_lastused == b_lastused then
@@ -201,10 +200,10 @@ local function order_buffers()
   if string_ends(config.order_buffers, "reverse") then
     -- Reverse the order of the marks
     local reversed_marks = {}
-    for i = #marks, 1, -1 do
-      table.insert(reversed_marks, marks[i])
+    for i = #buffer_manager.marks, 1, -1 do
+      table.insert(reversed_marks, buffer_manager.marks[i])
     end
-    marks = reversed_marks
+    buffer_manager.marks = reversed_marks
   end
 end
 
@@ -212,7 +211,7 @@ end
 function M.update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(buffer_manager.marks) do
     if not utils.buffer_is_valid(mark.buf_id, mark.filename) then
       remove_mark(idx)
     end
@@ -222,7 +221,7 @@ function M.update_marks()
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
     local bufname = vim.api.nvim_buf_get_name(buf)
     if utils.buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
-      table.insert(marks, {
+      table.insert(buffer_manager.marks, {
         filename = bufname,
         buf_id = buf,
       })
@@ -355,12 +354,12 @@ function M.toggle_quick_menu()
   local current_buf_line = 1
   local line = 1
   local current_short_fns = {}
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(buffer_manager.marks) do
     -- Add buffer only if it does not already exist
     if vim.fn.buflisted(mark.buf_id) ~= 1 then
-      marks[idx] = nil
+      buffer_manager.marks[idx] = nil
     else
-      local current_mark = marks[idx]
+      local current_mark = buffer_manager.marks[idx]
       initial_marks[idx] = {
         filename = current_mark.filename,
         buf_id = current_mark.buf_id,
@@ -411,7 +410,7 @@ function M.toggle_quick_menu()
   --     +  a modified buffer
   --     x  a buffer with read errors
   local bufs_list = vim.api.nvim_list_bufs()
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(buffer_manager.marks) do
     for _, ibuf in pairs(bufs_list) do
       if mark.buf_id == ibuf then
         local indicators = "     "
@@ -545,8 +544,8 @@ end
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
-  local original_marks = utils.deep_copy(marks)
-  marks = {}
+  local original_marks = utils.deep_copy(buffer_manager.marks)
+  buffer_manager.marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
       local filename = v
@@ -558,7 +557,7 @@ local function set_mark_list(new_list)
       else
         buf_id = vim.fn.bufnr(v)
       end
-      table.insert(marks, {
+      table.insert(buffer_manager.marks, {
         filename = filename,
         buf_id = buf_id,
       })
@@ -577,7 +576,7 @@ function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
   M.update_marks()
 
-  local mark = marks[id]
+  local mark = buffer_manager.marks[id]
   if not mark then
     return
   end
@@ -596,7 +595,7 @@ end
 
 local function get_current_buf_line()
   local current_buf_id = vim.fn.bufnr()
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(buffer_manager.marks) do
     if mark.buf_id == current_buf_id then
       return idx
     end
@@ -614,7 +613,7 @@ function M.nav_next()
   M.update_marks()
   local current_buf_line = get_current_buf_line()
   local next_buf_line = current_buf_line + 1
-  if next_buf_line > #marks then
+  if next_buf_line > #buffer_manager.marks then
     if config.loop_nav then
       M.nav_file(1)
     end
@@ -631,7 +630,7 @@ function M.nav_prev()
   local prev_buf_line = current_buf_line - 1
   if prev_buf_line < 1 then
     if config.loop_nav then
-        M.nav_file(#marks)
+        M.nav_file(#buffer_manager.marks)
     end
   else
     M.nav_file(prev_buf_line)
@@ -673,7 +672,7 @@ function M.save_menu_to_file(filename)
     log.error("save_menu_to_file(): Could not open file for writing")
     return
   end
-  for _, mark in pairs(marks) do
+  for _, mark in pairs(buffer_manager.marks) do
     file:write(Path:new(mark.filename):absolute() .. "\n")
   end
   file:close()
