@@ -1,9 +1,8 @@
 local Path = require("plenary.path")
-local buffer_manager = require("buffer_manager")
+local bm = require("buffer_manager")
 local popup = require("plenary.popup")
 local utils = require("buffer_manager.utils")
 local log = require("buffer_manager.dev").log
-local marks = require("buffer_manager").marks
 
 
 local version_info = vim.inspect(vim.version())
@@ -50,7 +49,7 @@ local M = {}
 Buffer_manager_win_id = nil
 Buffer_manager_bufh = nil
 local initial_marks = {}
-local config = buffer_manager.get_config()
+local config = bm.get_config()
 
 -- We save before we close because we use the state of the buffer as the list
 -- of items.
@@ -128,7 +127,7 @@ end
 
 
 local function is_buffer_in_marks(bufnr)
-  for _, mark in pairs(marks) do
+  for _, mark in pairs(bm.marks) do
     if mark.buf_id == bufnr then
       return true
     end
@@ -176,22 +175,22 @@ local function update_buffers()
   end
 
   -- Check additions
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(bm.marks) do
     local bufnr = vim.fn.bufnr(mark.buf_name)
     -- Add buffer only if it does not already exist or if it is not listed
     if bufnr == -1 or vim.fn.buflisted(bufnr) ~= 1 then
       vim.cmd("badd " .. mark.buf_name)
-      marks[idx].buf_id = vim.fn.bufnr(mark.buf_name)
-      marks[idx].shortcut = utils.assign_shortcut(marks, mark.buf_name)
+      bm.marks[idx].buf_id = vim.fn.bufnr(mark.buf_name)
+      bm.marks[idx].shortcut = utils.assign_shortcut(bm.marks, mark.buf_name)
     end
   end
 end
 
 local function remove_mark(idx)
-  marks[idx] = nil
-  if idx < #marks then
-    for i = idx, #marks do
-      marks[i] = marks[i + 1]
+  bm.marks[idx] = nil
+  if idx < #bm.marks then
+    for i = idx, #bm.marks do
+      bm.marks[i] = bm.marks[i + 1]
     end
   end
 end
@@ -199,23 +198,23 @@ end
 
 local function order_buffers()
   if utils.string_starts(config.order_buffers, "filename") then
-    table.sort(marks, function(a, b)
+    table.sort(bm.marks, function(a, b)
       local a_name = string.lower(utils.get_file_name(a.buf_name))
       local b_name = string.lower(utils.get_file_name(b.buf_name))
       return a_name < b_name
     end)
   elseif utils.string_starts(config.order_buffers, "fullpath") then
-    table.sort(marks, function(a, b)
+    table.sort(bm.marks, function(a, b)
       local a_name = string.lower(a.buf_name)
       local b_name = string.lower(b.buf_name)
       return a_name < b_name
     end)
   elseif utils.string_starts(config.order_buffers, "bufnr") then
-    table.sort(marks, function(a, b)
+    table.sort(bm.marks, function(a, b)
       return a.buf_id < b.buf_id
     end)
   elseif utils.string_starts(config.order_buffers, "lastused") then
-    table.sort(marks, function(a, b)
+    table.sort(bm.marks, function(a, b)
       local a_lastused = vim.fn.getbufinfo(a.buf_id)[1].lastused
       local b_lastused = vim.fn.getbufinfo(b.buf_id)[1].lastused
       if a_lastused == b_lastused then
@@ -228,10 +227,10 @@ local function order_buffers()
   if utils.string_ends(config.order_buffers, "reverse") then
     -- Reverse the order of the marks
     local reversed_marks = {}
-    for i = #marks, 1, -1 do
-      table.insert(reversed_marks, marks[i])
+    for i = #bm.marks, 1, -1 do
+      table.insert(reversed_marks, bm.marks[i])
     end
-    marks = reversed_marks
+    bm.marks = reversed_marks
   end
 end
 
@@ -239,7 +238,7 @@ end
 function M.update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(bm.marks) do
     if not utils.buffer_is_valid(mark.buf_id, mark.buf_name) then
       remove_mark(idx)
     end
@@ -249,10 +248,10 @@ function M.update_marks()
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
     local bufname = vim.api.nvim_buf_get_name(buf)
     if utils.buffer_is_valid(buf, bufname) and not is_buffer_in_marks(buf) then
-      table.insert(marks, {
+      table.insert(bm.marks, {
         buf_name = bufname,
         buf_id = buf,
-        shortcut = utils.assign_shortcut(marks, bufname),
+        shortcut = utils.assign_shortcut(bm.marks, bufname),
       })
     end
   end
@@ -317,7 +316,7 @@ local function set_menu_keybindings()
   end
   -- Go to file hitting its shortcut key
   if config.use_shortcuts then
-    for idx, mark in pairs(marks) do
+    for idx, mark in pairs(bm.marks) do
       if mark.shortcut then
         vim.api.nvim_buf_set_keymap(
           Buffer_manager_bufh,
@@ -345,7 +344,7 @@ end
 
 
 function M.unmap_shortcuts()
-  for _, mark in pairs(marks) do
+  for _, mark in pairs(bm.marks) do
     if mark.shortcut then
       vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", mark.shortcut)
     end
@@ -419,12 +418,12 @@ function M.toggle_quick_menu()
   local current_buf_line = 1
   local line = 1
   local current_short_fns = {}
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(bm.marks) do
     -- Add buffer only if it does not already exist
     if vim.fn.buflisted(mark.buf_id) ~= 1 then
-      marks[idx] = nil
+      bm.marks[idx] = nil
     else
-      local current_mark = marks[idx]
+      local current_mark = bm.marks[idx]
       -- Marks contain the absolute path, the buffer id and the shortcut char
       initial_marks[idx] = {
         buf_name = current_mark.buf_name,
@@ -478,7 +477,7 @@ function M.toggle_quick_menu()
   --     x  a buffer with read errors
   -- Also highlight shortcut chars and modified buffers
   local bufs_list = vim.api.nvim_list_bufs()
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(bm.marks) do
     if mark.shortcut and config.use_shortcuts then
       local file_name = utils.get_file_name(contents[idx])
       local dir_name = utils.get_dir_name(contents[idx])
@@ -643,8 +642,8 @@ end
 local function set_mark_list(new_list)
   log.trace("set_mark_list(): New list:", new_list)
 
-  local original_marks = utils.deep_copy(marks)
-  marks = {}
+  local original_marks = utils.deep_copy(bm.marks)
+  bm.marks = {}
   for _, v in pairs(new_list) do
     if type(v) == "string" then
       local buf_name = v
@@ -657,9 +656,9 @@ local function set_mark_list(new_list)
         shortcut = current_mark.shortcut
       else
         buf_id = vim.fn.bufnr(v)
-        shortcut = utils.assign_shortcut(marks, buf_name)
+        shortcut = utils.assign_shortcut(bm.marks, buf_name)
       end
-      table.insert(marks, {
+      table.insert(bm.marks, {
         buf_name = buf_name,
         buf_id = buf_id,
         shortcut = shortcut,
@@ -679,7 +678,7 @@ function M.nav_file(id, command)
   log.trace("nav_file(): Navigating to", id)
   M.update_marks()
 
-  local mark = marks[id]
+  local mark = bm.marks[id]
   if not mark then
     return
   end
@@ -698,7 +697,7 @@ end
 
 local function get_current_buf_line()
   local current_buf_id = vim.fn.bufnr()
-  for idx, mark in pairs(marks) do
+  for idx, mark in pairs(bm.marks) do
     if mark.buf_id == current_buf_id then
       return idx
     end
@@ -716,7 +715,7 @@ function M.nav_next()
   M.update_marks()
   local current_buf_line = get_current_buf_line()
   local next_buf_line = current_buf_line + 1
-  if next_buf_line > #marks then
+  if next_buf_line > #bm.marks then
     if config.loop_nav then
       M.nav_file(1)
     end
@@ -733,7 +732,7 @@ function M.nav_prev()
   local prev_buf_line = current_buf_line - 1
   if prev_buf_line < 1 then
     if config.loop_nav then
-        M.nav_file(#marks)
+        M.nav_file(#bm.marks)
     end
   else
     M.nav_file(prev_buf_line)
@@ -775,7 +774,7 @@ function M.save_menu_to_file(path)
     log.error("save_menu_to_file(): Could not open file for writing")
     return
   end
-  for _, mark in pairs(marks) do
+  for _, mark in pairs(bm.marks) do
     file:write(Path:new(mark.buf_name):absolute() .. "\n")
   end
   file:close()
