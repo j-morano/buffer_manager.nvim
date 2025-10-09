@@ -335,7 +335,7 @@ local function set_menu_keybindings()
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,
       "n",
-      "e",
+      "<space>",
       "<Cmd>lua require('buffer_manager.ui').unmap_shortcuts()<CR>",
       { noremap = true, silent = true }
     )
@@ -349,7 +349,7 @@ function M.unmap_shortcuts()
       vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", mark.shortcut)
     end
   end
-  vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", "e")
+  vim.api.nvim_buf_del_keymap(Buffer_manager_bufh, "n", "<space>")
 end
 
 
