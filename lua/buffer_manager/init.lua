@@ -38,7 +38,7 @@ function M.setup(config)
   end
 
   local default_config = {
-    line_keys = "1234567890",
+    line_keys = "12",
     select_menu_item_commands = {
       edit = {
         key = "<CR>",
@@ -51,16 +51,21 @@ function M.setup(config)
     short_file_names = false,
     show_depth = true,
     short_term_names = false,
+    show_cols = "number", -- "kbs", "both"
     loop_nav = true,
     highlight = "",
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     format_function = nil,
-    order_buffers = nil,
+    order_buffers = nil, -- "filename", "bufnr", "lastused", "fullpath"
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
     use_shortcuts = false,
     win_position = { h=0.5, v=0.5 },
+    quick_kbs = {
+      enabled = false,
+      kb = nil
+    },
   }
 
   local complete_config = utils.merge_tables(default_config, config)

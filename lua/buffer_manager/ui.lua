@@ -263,6 +263,31 @@ function M.update_marks()
 end
 
 
+local quick_keys_enabled = false
+
+local function toggle_buffer_manager_quick_keys()
+  if quick_keys_enabled then
+    -- ENABLE: Re-apply the mappings with nowait
+    for i = 1, #config.line_keys do
+      local c = config.line_keys:sub(i, i)
+      vim.api.nvim_buf_set_keymap(Buffer_manager_bufh, "n", c,
+        string.format("<Cmd>%s | lua require('buffer_manager.ui').select_menu_item()<CR>", i),
+        { nowait = true, noremap = true, silent = true }
+      )
+    end
+    print("Quick keys enabled")
+  else
+    -- DISABLE: Loop through and delete the buffer-local mappings
+    for i = 1, #config.line_keys do
+      local c = config.line_keys:sub(i, i)
+      pcall(vim.api.nvim_buf_del_keymap, Buffer_manager_bufh, "n", c)
+    end
+    print("Quick keys disabled")
+  end
+  quick_keys_enabled = not quick_keys_enabled
+end
+
+
 local function set_menu_keybindings()
   for _, key in pairs(config.toggle_key_bindings) do
     vim.api.nvim_buf_set_keymap(
@@ -299,24 +324,9 @@ local function set_menu_keybindings()
       Buffer_manager_bufh
     )
   )
-  -- Go to file hitting its line key
-  local str = config.line_keys
-  for i = 1, #str do
-    local c = str:sub(i,i)
-    vim.api.nvim_buf_set_keymap(
-      Buffer_manager_bufh,
-      "n",
-      c,
-      string.format(
-        "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
-        ".select_menu_item()<CR>",
-        i
-      ),
-      {}
-    )
-  end
-  -- Go to file hitting its shortcut key
+
   if config.use_shortcuts then
+    -- Go to file hitting its shortcut key
     for idx, mark in pairs(bm.marks) do
       if mark.shortcut then
         vim.api.nvim_buf_set_keymap(
@@ -332,7 +342,7 @@ local function set_menu_keybindings()
         )
       end
     end
-    -- Add keybinding "e" to start editing mode and unmap the previous keybindings
+    -- Add keybinding to start editing mode and unmap the previous keybindings
     vim.api.nvim_buf_set_keymap(
       Buffer_manager_bufh,
       "n",
@@ -340,6 +350,33 @@ local function set_menu_keybindings()
       "<Cmd>lua require('buffer_manager.ui').unmap_shortcuts()<CR>",
       { noremap = true, silent = true }
     )
+  elseif config.quick_kbs.enabled then
+    -- Go to file hitting its line key, with quick keys and toggle option
+    quick_keys_enabled = true
+    toggle_buffer_manager_quick_keys()
+    vim.keymap.set(
+      "n",
+      config.quick_kbs.kb,
+      toggle_buffer_manager_quick_keys,
+      { buffer = Buffer_manager_bufh, noremap = true, silent = true }
+    )
+  else
+    -- Go to file hitting its line key
+    local str = config.line_keys
+    for i = 1, #str do
+      local c = str:sub(i,i)
+      vim.api.nvim_buf_set_keymap(
+        Buffer_manager_bufh,
+        "n",
+        c,
+        string.format(
+          "<Cmd>%s <bar> lua require('buffer_manager.ui')"..
+          ".select_menu_item()<CR>",
+          i
+        ),
+        {}
+      )
+    end
   end
 end
 
@@ -356,6 +393,27 @@ end
 
 local function set_win_buf_options(contents, current_buf_line)
   vim.api.nvim_set_option_value("number", true, { win = Buffer_manager_win_id })
+  local stc = nil
+  local dynamic_width = 1
+  if #contents >= 100 then
+    dynamic_width = 3
+  elseif #contents >= 10 then
+    dynamic_width = 2
+  end
+  vim.api.nvim_set_option_value("numberwidth", dynamic_width, { win = Buffer_manager_win_id })
+  if config.show_cols == "both" then
+    -- [Key] [Space] [Standard Line Number] [Space]
+    stc = " %{v:lua.string.sub('" .. config.line_keys .. "',v:lnum,v:lnum)} %l "
+  elseif config.show_cols == "kbs" then
+    -- [Key] [Space] [Empty space where number was]
+    stc = " %{v:lua.string.sub('" .. config.line_keys .. "',v:lnum,v:lnum)} "
+  elseif config.show_cols == "number" then
+    stc = " %l "
+  end
+  if stc then
+    vim.api.nvim_set_option_value("statuscolumn", stc, { win = Buffer_manager_win_id })
+  end
+
   for key, value in pairs(config.win_extra_options) do
     vim.api.nvim_set_option_value(key, value, { win = Buffer_manager_win_id })
   end

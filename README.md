@@ -18,7 +18,7 @@ I want to manage Neovim buffers easily, without the mental overhead of rememberi
 
 ## The proposed solution
 
-Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just hit its line number, or move to it and press `<CR>`. To delete the buffer, delete it from the list. To add it (predictably) add a filename to the list.
+Use a buffer-like floating window where all the open buffers are listed. To select one buffer, just hit its line identifier (a char), or move to it and press `<CR>`. To delete the buffer, delete it from the list. To add it (predictably) add a filename to the list.
 
 
 ## Installation
@@ -40,7 +40,7 @@ use 'j-morano/buffer_manager.nvim'
 ```
 
 Then, move to one of them, and open it with `<CR>`.
-Alternative: press the key corresponding to its line number (notice that, in this case, 0 maps to 10, since there is no 0 line).
+Alternative: press the key corresponding to its line identifier char, which are numbers by default (notice that, in this case, 0 maps to 10, since there is no 0 line).
 
 ### Add buffer/Create file
 
@@ -102,6 +102,7 @@ require("buffer_manager").setup({ })
 * `short_file_names` (boolean): Shorten buffer names: filename+extension, preceded by the number of levels under the current dir and a slash.
 * `show_depth` (boolean): Show the number of levels under the current dir before the filename (`n|filename`).
 * `short_term_names` (boolean): Shorten terminal buffer names.
+* `show_cols` (string): show columns in the menu. Options are `"number"` (show only the line number), `"kbs"` (show only the keybindings), and `"both"` (show both line number and keybindings).
 * `loop_nav` (boolean): Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
 * `highlight` (string): highlight for the window. Format: `from1:to1,from2:to2`. E.g. `Normal:MyCustomNormal`. (See `:help winhighlight`.)
 * `win_extra_options` (table): extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
@@ -112,6 +113,7 @@ require("buffer_manager").setup({ })
 * `toggle_key_bindings` (table): table with the keys to toggle the menu. The default is `{ "q", "<ESC>" }`, which means that the menu can be closed with `q` or `<ESC>`.
 * `use_shortcuts` (boolean): whether to use characters from filenames to navigate to them. If `true`, the first character of the filename is used as a shortcut (i.e. as a key for the line). If the character is already used by another filename, the next character is used, and so on. It is important to note that this mode overrides the default Vim keybindings. E.g., `d`, if there is file names `data.lua`, would behave as a shortcut in normal mode, instead of Vim's `delete`. To avoid this, and enter the regular `Normal` mode with default keybindings, just press `<space>`. The default is for this option `false`.
 * `win_position` (table): position of the window in the screen. It is a table with two fields: `h` and `v`, which represent the horizontal and vertical position, respectively. The values are relative to the screen size, so they should be between `0` and `1`. For example, `{ h = 0.5, v = 0.5 }` places the window in the center of the screen.
+* `quick_kbs` (table): whether to use quick keybindings to open the files. Quick keybindings overwrite the Neovim keybindings for the other buffers using `nowait = true`, so there is no delay. The option can be activated by setting `enabled` to `true`. In addition, in case some quick keybindings overlap with those useful for editing the buffers, you can specify a keybinding to temporarily disable the quick keybindings by setting the `kb` field.
 
 
 In addition, you can specify a custom color for the modified buffers, the indicators, and the shortcut characters, by setting the corresponding highlight groups to the desired color. For example:
@@ -139,16 +141,21 @@ vim.api.nvim_set_hl(0, "BufferManagerIndicator", { fg = "#999999", italic = true
     short_file_names = false,
     show_depth = true,
     short_term_names = false,
+    show_cols = "number", -- "kbs", "both"
     loop_nav = true,
     highlight = "",
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     format_function = nil,
-    order_buffers = nil,
+    order_buffers = nil, -- "filename", "bufnr", "lastused", "fullpath"
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
     use_shortcuts = false,
     win_position = { h=0.5, v=0.5 },
+    quick_kbs = {
+      enabled = false,
+      kb = nil
+    },
   }
 ```
 
