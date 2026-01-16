@@ -68,33 +68,34 @@ local function create_window()
   local width = 60
   local height = 10
 
-  if config then
-    if config.width ~= nil then
-      if config.width <= 1 then
-        local gwidth = vim.api.nvim_list_uis()[1].width
-        width = math.floor(gwidth * config.width)
-      else
-        width = config.width
-      end
+  if config.width ~= nil then
+    if config.width <= 1 then
+      local gwidth = vim.api.nvim_list_uis()[1].width
+      width = math.floor(gwidth * config.width)
+    else
+      width = config.width
     end
+  end
 
-    if config.height ~= nil then
-      if config.height <= 1 then
-        local gheight = vim.api.nvim_list_uis()[1].height
-        height = math.floor(gheight * config.height)
-      else
-        height = config.height
-      end
+  if config.height ~= nil then
+    if config.height <= 1 then
+      local gheight = vim.api.nvim_list_uis()[1].height
+      height = math.floor(gheight * config.height)
+    else
+      height = config.height
     end
   end
 
   local borderchars = config.borderchars
   local bufnr = vim.api.nvim_create_buf(false, false)
 
+  local line = math.max(1, math.floor((vim.o.lines - height) * config.win_position.v) - 1)
+  local col = math.max(1, math.floor((vim.o.columns - width) * config.win_position.h))
+
   local win_config = {
     title = "Buffers",
-    line = math.floor(((vim.o.lines - height) / 2) - 1),
-    col = math.floor((vim.o.columns - width) / 2),
+    line = line,
+    col = col,
     minwidth = width,
     minheight = height,
     borderchars = borderchars,

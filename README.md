@@ -111,6 +111,7 @@ require("buffer_manager").setup({ })
 * `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
 * `toggle_key_bindings` (table): table with the keys to toggle the menu. The default is `{ "q", "<ESC>" }`, which means that the menu can be closed with `q` or `<ESC>`.
 * `use_shortcuts` (boolean): whether to use characters from filenames to navigate to them. If `true`, the first character of the filename is used as a shortcut (i.e. as a key for the line). If the character is already used by another filename, the next character is used, and so on. It is important to note that this mode overrides the default Vim keybindings. E.g., `d`, if there is file names `data.lua`, would behave as a shortcut in normal mode, instead of Vim's `delete`. To avoid this, and enter the regular `Normal` mode with default keybindings, just press `<space>`. The default is for this option `false`.
+* `win_position` (table): position of the window in the screen. It is a table with two fields: `h` and `v`, which represent the horizontal and vertical position, respectively. The values are relative to the screen size, so they should be between `0` and `1`. For example, `{ h = 0.5, v = 0.5 }` places the window in the center of the screen.
 
 
 In addition, you can specify a custom color for the modified buffers, the indicators, and the shortcut characters, by setting the corresponding highlight groups to the desired color. For example:
@@ -147,6 +148,7 @@ vim.api.nvim_set_hl(0, "BufferManagerIndicator", { fg = "#999999", italic = true
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
     use_shortcuts = false,
+    win_position = { h=0.5, v=0.5 },
   }
 ```
 

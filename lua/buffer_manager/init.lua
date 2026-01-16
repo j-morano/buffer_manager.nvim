@@ -60,6 +60,7 @@ function M.setup(config)
     show_indicators = nil,
     toggle_key_bindings = { "q", "<ESC>" },
     use_shortcuts = false,
+    win_position = { h=0.5, v=0.5 },
   }
 
   local complete_config = utils.merge_tables(default_config, config)
