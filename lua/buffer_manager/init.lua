@@ -38,7 +38,7 @@ function M.setup(config)
   end
 
   local default_config = {
-    line_keys = "12",
+    line_keys = "1234567890",
     select_menu_item_commands = {
       edit = {
         key = "<CR>",
