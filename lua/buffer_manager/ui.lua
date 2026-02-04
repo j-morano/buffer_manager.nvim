@@ -752,6 +752,8 @@ function M.nav_file(id, command)
   else
     vim.cmd(command .. " " .. mark.buf_name)
   end
+  -- Force a redraw of the command line to clear any lingering text
+  vim.cmd("redraw")
 end
 
 local function get_current_buf_line()
