@@ -56,6 +56,7 @@ function M.setup(config)
     highlight = "",
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+    title = "Buffers",
     format_function = nil,
     order_buffers = nil, -- "filename", "bufnr", "lastused", "fullpath"
     show_indicators = nil,

@@ -105,8 +105,9 @@ require("buffer_manager").setup({ })
 * `show_cols` (string): show columns in the menu. Options are `"number"` (show only the line number), `"kbs"` (show only the keybindings), and `"both"` (show both line number and keybindings).
 * `loop_nav` (boolean): Loop or not the files when using `nav_next` and `nav_prev`. When `false`, `nav_prev` does nothing when at first buffer, and either does `nav_next` when at last one. When `true`, `nav_next` goes to the first buffer when at last one, and `nav_prev` goes to the last buffer when at first one.
 * `highlight` (string): highlight for the window. Format: `from1:to1,from2:to2`. E.g. `Normal:MyCustomNormal`. (See `:help winhighlight`.)
-* `win_extra_options` (table): extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.)
+* `win_extra_options` (table): extra options for the menu window. E.g. `{ relativenumber = true }`. (See `:help option-list`.) It can also be used to show an info line below the title, e.g. the keybindings, with `{ winbar = " <CR> open   q close" }`. (See `:help 'winbar'`.)
 * `borderchars` (table): border characters for the menu window.
+* `title` (string|function): title of the menu window. If it is a function, it is called every time the menu is opened and should return a string. E.g., `function() return vim.fn.fnamemodify(vim.fn.getcwd(), ":~") end` shows the current directory. The default is `"Buffers"`.
 * `format_function` (function|nil): support for custom function to format buffer names. The function should receive a string and return a string. This option is incompatible with `short_file_names`. To use it, `short_file_names` must be set to `false`. By default, the function is `nil`, which means no special formatting is applied.
 * `order_buffers` (string|nil): order the buffers in the menu. Options are `"filename"`, `"bufnr"`, `"lastused"` and `"fullpath"`. By default, it is `nil`, which means the buffers are not automatically ordered. If `reverse` is added to the option, the buffers are ordered in reverse order. For example, `order_buffers = 'filename:reverse'`.
 * `show_indicators` (string|nil): show indicators for buffers in virtual text. See `:help ls` for more information about indicators. Possible values are `"before"` (before filename) and `"after"` (after filename). When set to `nil`, no indicators are shown.
@@ -146,6 +147,7 @@ vim.api.nvim_set_hl(0, "BufferManagerIndicator", { fg = "#999999", italic = true
     highlight = "",
     win_extra_options = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+    title = "Buffers",
     format_function = nil,
     order_buffers = nil, -- "filename", "bufnr", "lastused", "fullpath"
     show_indicators = nil,

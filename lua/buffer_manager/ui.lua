@@ -94,8 +94,13 @@ local function create_window()
   local line = math.max(1, math.floor((vim.o.lines - height) * config.win_position.v) - 1)
   local col = math.max(1, math.floor((vim.o.columns - width) * config.win_position.h))
 
+  local title = config.title
+  if type(title) == "function" then
+    title = title()
+  end
+
   local win_config = {
-    title = "Buffers",
+    title = title,
     line = line,
     col = col,
     minwidth = width,
