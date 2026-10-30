@@ -70,7 +70,13 @@ function M.setup(config)
 
   local complete_config = utils.merge_tables(default_config, config)
 
-  BufferManagerConfig = complete_config
+  -- Update in place, as other modules keep a reference to this table
+  for key in pairs(BufferManagerConfig) do
+    BufferManagerConfig[key] = nil
+  end
+  for key, value in pairs(complete_config) do
+    BufferManagerConfig[key] = value
+  end
   log.debug("setup(): Config", BufferManagerConfig)
 end
 
