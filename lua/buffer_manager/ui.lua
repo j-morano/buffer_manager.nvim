@@ -7,6 +7,8 @@ local log = require("buffer_manager.dev").log
 
 local version_info = vim.inspect(vim.version())
 local version_minor = tonumber(version_info:match("minor = (%d+)"))
+-- vim.hl is vim.highlight before Neovim 0.11
+local hl_range = (vim.hl or vim.highlight).range
 
 local ns_mod = vim.api.nvim_create_namespace("BufferManagerModified")
 local ns_ind = vim.api.nvim_create_namespace("BufferManagerIndicator")
@@ -177,21 +179,12 @@ local function update_buffers()
 
   -- Check additions
   for idx, mark in pairs(bm.marks) do
-    local bufnr = vim.fn.bufnr(mark.buf_name)
+    local bufnr = utils.bufnr_by_name(mark.buf_name)
     -- Add buffer only if it does not already exist or if it is not listed
     if bufnr == -1 or vim.fn.buflisted(bufnr) ~= 1 then
-      vim.cmd("badd " .. mark.buf_name)
-      bm.marks[idx].buf_id = vim.fn.bufnr(mark.buf_name)
+      vim.cmd("badd " .. vim.fn.fnameescape(mark.buf_name))
+      bm.marks[idx].buf_id = utils.bufnr_by_name(mark.buf_name)
       bm.marks[idx].shortcut = utils.assign_shortcut(bm.marks, mark.buf_name)
-    end
-  end
-end
-
-local function remove_mark(idx)
-  bm.marks[idx] = nil
-  if idx < #bm.marks then
-    for i = idx, #bm.marks do
-      bm.marks[i] = bm.marks[i + 1]
     end
   end
 end
@@ -239,11 +232,13 @@ end
 function M.update_marks()
   -- Check if any buffer has been deleted
   -- If so, remove it from marks
-  for idx, mark in pairs(bm.marks) do
-    if not utils.buffer_is_valid(mark.buf_id, mark.buf_name) then
-      remove_mark(idx)
+  local valid_marks = {}
+  for _, mark in ipairs(bm.marks) do
+    if utils.buffer_is_valid(mark.buf_id, mark.buf_name) then
+      table.insert(valid_marks, mark)
     end
   end
+  bm.marks = valid_marks
   -- Check if any buffer has been added
   -- If so, add it to marks
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
@@ -265,26 +260,28 @@ end
 
 local quick_keys_enabled = false
 
-local function toggle_buffer_manager_quick_keys()
-  if quick_keys_enabled then
-    -- ENABLE: Re-apply the mappings with nowait
-    for i = 1, #config.line_keys do
-      local c = config.line_keys:sub(i, i)
+local function set_quick_keys(enable, notify)
+  for i = 1, #config.line_keys do
+    local c = config.line_keys:sub(i, i)
+    if enable then
+      -- Apply the mappings with nowait
       vim.api.nvim_buf_set_keymap(Buffer_manager_bufh, "n", c,
         string.format("<Cmd>%s | lua require('buffer_manager.ui').select_menu_item()<CR>", i),
         { nowait = true, noremap = true, silent = true }
       )
-    end
-    print("Quick keys enabled")
-  else
-    -- DISABLE: Loop through and delete the buffer-local mappings
-    for i = 1, #config.line_keys do
-      local c = config.line_keys:sub(i, i)
+    else
+      -- Delete the buffer-local mappings
       pcall(vim.api.nvim_buf_del_keymap, Buffer_manager_bufh, "n", c)
     end
-    print("Quick keys disabled")
   end
-  quick_keys_enabled = not quick_keys_enabled
+  quick_keys_enabled = enable
+  if notify then
+    print(enable and "Quick keys enabled" or "Quick keys disabled")
+  end
+end
+
+local function toggle_buffer_manager_quick_keys()
+  set_quick_keys(not quick_keys_enabled, true)
 end
 
 
@@ -352,14 +349,15 @@ local function set_menu_keybindings()
     )
   elseif config.quick_kbs.enabled then
     -- Go to file hitting its line key, with quick keys and toggle option
-    quick_keys_enabled = true
-    toggle_buffer_manager_quick_keys()
-    vim.keymap.set(
-      "n",
-      config.quick_kbs.kb,
-      toggle_buffer_manager_quick_keys,
-      { buffer = Buffer_manager_bufh, noremap = true, silent = true }
-    )
+    set_quick_keys(true)
+    if config.quick_kbs.kb then
+      vim.keymap.set(
+        "n",
+        config.quick_kbs.kb,
+        toggle_buffer_manager_quick_keys,
+        { buffer = Buffer_manager_bufh, noremap = true, silent = true }
+      )
+    end
   else
     -- Go to file hitting its line key
     local str = config.line_keys
@@ -433,13 +431,13 @@ local function set_win_buf_options(contents, current_buf_line)
     )
     vim.api.nvim_set_option_value(
       "bufhidden",
-      "delete",
+      "wipe",
       { buf = Buffer_manager_bufh }
     )
   else
     vim.api.nvim_buf_set_option(Buffer_manager_bufh, "filetype", "buffer_manager")
     vim.api.nvim_buf_set_option(Buffer_manager_bufh, "buftype", "acwrite")
-    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "delete")
+    vim.api.nvim_buf_set_option(Buffer_manager_bufh, "bufhidden", "wipe")
   end
   vim.cmd(string.format(":call cursor(%d, %d)", current_buf_line, 1))
 end
@@ -477,43 +475,37 @@ function M.toggle_quick_menu()
   local current_buf_line = 1
   local line = 1
   local current_short_fns = {}
-  for idx, mark in pairs(bm.marks) do
-    -- Add buffer only if it does not already exist
-    if vim.fn.buflisted(mark.buf_id) ~= 1 then
-      bm.marks[idx] = nil
-    else
-      local current_mark = bm.marks[idx]
-      -- Marks contain the absolute path, the buffer id and the shortcut char
-      initial_marks[idx] = {
-        buf_name = current_mark.buf_name,
-        buf_id = current_mark.buf_id,
-        shortcut = current_mark.shortcut,
-      }
-      if current_mark.buf_id == current_buf_id then
-        current_buf_line = line
-      end
-      local display_name = current_mark.buf_name
-      if not utils.string_starts(display_name, "term://") then
-        if config.short_file_names then
-          display_name = utils.get_short_file_name(display_name, current_short_fns)
-          current_short_fns[display_name] = true
-        elseif config.format_function then
-          display_name = config.format_function(display_name)
-        else
-          display_name = utils.normalize_path(display_name)
-        end
-      else
-        if config.short_term_names then
-          display_name = utils.get_short_term_name(display_name)
-        end
-      end
-      if config.show_indicators == 'before' then
-         contents[line] = string.format("      %s", display_name)
-      else
-         contents[line] = string.format("%s", display_name)
-      end
-      line = line + 1
+  for idx, mark in ipairs(bm.marks) do
+    -- Marks contain the absolute path, the buffer id and the shortcut char
+    initial_marks[idx] = {
+      buf_name = mark.buf_name,
+      buf_id = mark.buf_id,
+      shortcut = mark.shortcut,
+    }
+    if mark.buf_id == current_buf_id then
+      current_buf_line = line
     end
+    local display_name = mark.buf_name
+    if not utils.string_starts(display_name, "term://") then
+      if config.short_file_names then
+        display_name = utils.get_short_file_name(display_name, current_short_fns)
+        current_short_fns[display_name] = true
+      elseif config.format_function then
+        display_name = config.format_function(display_name)
+      else
+        display_name = utils.normalize_path(display_name)
+      end
+    else
+      if config.short_term_names then
+        display_name = utils.get_short_term_name(display_name)
+      end
+    end
+    if config.show_indicators == 'before' then
+       contents[line] = string.format("      %s", display_name)
+    else
+       contents[line] = string.format("%s", display_name)
+    end
+    line = line + 1
   end
 
   set_win_buf_options(contents, current_buf_line)
@@ -546,10 +538,11 @@ function M.toggle_quick_menu()
       if dir_name == nil then
         dir_name = ""
       end
-      local char_pos = #dir_name + string.lower(file_name):find(mark.shortcut, 1, true)
+      local found = string.lower(file_name):find(mark.shortcut, 1, true)
+      local char_pos = found and (#dir_name + found)
       if char_pos then
         if version_minor > 9 then
-          vim.hl.range(
+          hl_range(
             Buffer_manager_bufh,
             ns_short,
             "BufferManagerShortcut",
@@ -625,7 +618,7 @@ function M.toggle_quick_menu()
         if modified then
           indicators = utils.replace_char(indicators, 5, "+")
           if version_minor > 9 then
-            vim.hl.range(
+            hl_range(
               Buffer_manager_bufh,
               ns_mod,
               "BufferManagerModified",
@@ -714,7 +707,7 @@ local function set_mark_list(new_list)
         buf_id = current_mark.buf_id
         shortcut = current_mark.shortcut
       else
-        buf_id = vim.fn.bufnr(v)
+        buf_id = utils.bufnr_by_name(v)
         shortcut = utils.assign_shortcut(bm.marks, buf_name)
       end
       table.insert(bm.marks, {
@@ -742,15 +735,15 @@ function M.nav_file(id, command)
     return
   end
   if command == nil or command == "edit" then
-    local bufnr = vim.fn.bufnr(mark.buf_name)
+    local bufnr = utils.bufnr_by_name(mark.buf_name)
     -- Check if buffer exists by buffer name
     if bufnr ~= -1 then
       vim.cmd("buffer " .. bufnr)
     else
-      vim.cmd("edit " .. mark.buf_name)
+      vim.cmd("edit " .. vim.fn.fnameescape(mark.buf_name))
     end
   else
-    vim.cmd(command .. " " .. mark.buf_name)
+    vim.cmd(command .. " " .. vim.fn.fnameescape(mark.buf_name))
   end
   -- Force a redraw of the command line to clear any lingering text
   vim.cmd("redraw")
@@ -830,6 +823,7 @@ function M.save_menu_to_file(path)
       return
     end
   end
+  M.update_marks()
   local file = io.open(path, "w")
   if file == nil then
     log.error("save_menu_to_file(): Could not open file for writing")

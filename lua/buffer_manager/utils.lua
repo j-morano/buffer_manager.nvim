@@ -102,9 +102,32 @@ function M.is_white_space(str)
   return str:gsub("%s", "") == ""
 end
 
+-- Like vim.fn.bufnr(name), but without file-pattern matching
+function M.bufnr_by_name(name)
+  if not string.find(name, "://", 1, true) then
+    name = vim.fn.fnamemodify(name, ":p")
+  end
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_get_name(buf) == name then
+      return buf
+    end
+  end
+  return -1
+end
+
+
 function M.buffer_is_valid(buf_id, buf_name)
     return 1 == vim.fn.buflisted(buf_id)
       and buf_name ~= ""
+end
+
+
+local islist = vim.islist or vim.tbl_islist
+
+
+-- Lists are replaced, not merged by index
+local function is_nonempty_list(t)
+  return next(t) ~= nil and islist(t)
 end
 
 
@@ -112,7 +135,7 @@ end
 local function merge_table_impl(t1, t2)
   for k, v in pairs(t2) do
     if type(v) == "table" then
-      if type(t1[k]) == "table" then
+      if type(t1[k]) == "table" and not is_nonempty_list(v) then
         merge_table_impl(t1[k], v)
       else
         t1[k] = v
@@ -156,6 +179,12 @@ function M.assign_shortcut(cmarks, buf_name)
   -- Iterate over the filename, and assing the first char that is not already
   --  assigned in marks.
   local assigned_chars = {}
+  -- Skip the keys that close the menu (global config, as requiring
+  -- buffer_manager here would be circular)
+  local toggle_keys = (BufferManagerConfig or {}).toggle_key_bindings
+  for _, key in pairs(toggle_keys or {}) do
+    assigned_chars[key] = true
+  end
   for _, mark in pairs(cmarks) do
     if mark.shortcut then
       assigned_chars[mark.shortcut] = true
