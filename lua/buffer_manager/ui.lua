@@ -304,12 +304,26 @@ local function set_menu_keybindings()
       {}
     )
   end
-  vim.cmd(
-    string.format(
-      "autocmd BufModifiedSet <buffer=%s> set nomodified",
-      Buffer_manager_bufh
+  -- BufModifiedSet was removed in Neovim 0.13, OptionSet is not reliable before
+  if vim.fn.has("nvim-0.13") == 1 then
+    local bufh = Buffer_manager_bufh
+    vim.api.nvim_create_autocmd("OptionSet", {
+      group = vim.api.nvim_create_augroup("BufferManagerModified", { clear = true }),
+      pattern = "modified",
+      callback = function()
+        if vim.api.nvim_get_current_buf() == bufh then
+          vim.bo[bufh].modified = false
+        end
+      end,
+    })
+  else
+    vim.cmd(
+      string.format(
+        "autocmd BufModifiedSet <buffer=%s> set nomodified",
+        Buffer_manager_bufh
+      )
     )
-  )
+  end
   vim.cmd(
     "autocmd BufLeave <buffer> ++nested ++once silent"..
     " lua require('buffer_manager.ui').toggle_quick_menu()"
